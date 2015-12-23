@@ -1,0 +1,39 @@
+<?php
+module_load_include('inc', 'ontology_search', 'api/ontology_search_api');
+require('includes/ontology_search.form.inc');
+// this is to include the file that contains all the functions
+/**
+ * @file
+ * This is the main module file.
+
+
+**/
+
+function ontology_search_menu()
+{
+  $items = array();
+  $items['ontology_search/form'] = array(
+        'type' => MENU_CALLBACK,
+        'access arguments' => array('access content'),
+        'page callback' => 'drupal_get_form',
+        'page arguments'=>array('ontology_search_form'));
+
+  return $items;
+
+}
+//this creates the form used to do the searching
+
+function ontology_search_help()
+{
+
+}
+
+function ontology_search_permissions()
+{
+
+}
+
+function ontology_search_theme()
+{
+
+}

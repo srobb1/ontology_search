@@ -1,0 +1,43 @@
+<?php
+function ontology_search_install()
+{
+}
+
+function ontology_search_requirements($phase) {
+  $requirements = array();
+  if ($phase == 'install') {
+    // EXPLANATION: It is essential that Chado be installed for almost all
+    // Tripal modules. Therefore, the following code checks to ensure Chado is
+    // installed and available. If your module does not require that Chado be
+    // installed, you can remove the following check.
+
+    // make sure chado is installed
+    if (!$GLOBALS["chado_is_installed"]) {
+      $requirements ['tripal_example'] = array(
+          'title' => "tripal_example",
+          'value' => "ERROR: Chado must be installed before this module can be enabled",
+          'severity' => REQUIREMENT_ERROR,
+      );
+    }
+  }
+  return $requirements;
+}
+
+function ontology_search_uninstall()
+{
+}
+
+function ontology_search_dependencies() {
+  $dependencies = array();
+
+  // EXPLANATION: here we can specify which modules must be updated prior to
+  // applying the updates in this module. This is useful because it prevents
+  // updates from being executed out of order. The following example code shows
+  // that the 'tripal_example' module update number 7200 must be executed after
+  // the 'tripal_cv' module's 7200 update.
+  $dependencies['tripal_example'][7200] = array(
+    'tripal_cv' => 7200
+  );
+
+  return $dependencies;
+}

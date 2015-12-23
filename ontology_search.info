@@ -1,0 +1,5 @@
+name = ontology_search
+description = This module permits hierarchical searching of ontologies.
+project = ontology_search
+package = Tripal Extensions
+core = 7.x
