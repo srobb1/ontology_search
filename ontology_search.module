@@ -35,5 +35,6 @@ function ontology_search_permissions()
 
 function ontology_search_theme()
 {
-
+  $themes = array();
+  return $themes;
 }
