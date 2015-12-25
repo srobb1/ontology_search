@@ -48,18 +48,18 @@ function Ontology_Search_Get_Relatives($form, $form_state)
 if($form_state['values']['GW']=='0')
    { 
       $parents=ontology_search_getParent($form_state['values']['search_term']);
-      printALL($parents);
+      printALL($parents,"parents");
   
    }
 elseif($form_state['values']['GW']=='1')
    {
       $children=ontology_search_getChild($form_state['values']['search_term']);
-      printALL($children);
+      printALL($children,"children");
    }
 elseif($form_state['values']['GW']=='2')
    {
       $sibilings=ontology_search_getSibilings($form_state['values']['search_term']);
-      printALL($sibilings);
+      printALL($sibilings,"sibilings");
    }
 
 }
@@ -83,6 +83,8 @@ function ontology_search_getParent($id)
           $n= new TermNode($record->object_id,$record->pathdistance,$record->type_id);
           $sta->push($n);
          }
+      if($sta->isEmpty())
+         return NULL;   
        $out=$sta->pop();
        $head=$out;
        $tail=$out;
@@ -131,7 +133,9 @@ function ontology_search_getSibilings($id)
          $n= new TermNode($record->object_id,$record->pathdistance,$record->type_id);
          $sta->push($n);
        }
-     $final=NULL;   
+     $final=NULL;
+     if($sta->isEmpty())
+         return NULL;      
      $out=$sta->pop();
      while(!$sta->isEmpty())
       { 
@@ -236,9 +240,9 @@ function ontology_search_getChild($id)
         $n= new TermNode($record->subject_id,$record->pathdistance,$record->type_id);
         $sta->push($n);
       }
-    
-    if(!$sta->isEmpty())
-      $out=$sta->pop();
+    if($sta->isEmpty())
+         return NULL;   
+    $out=$sta->pop();
     $head=$out;
     $tail=$out;
     while(!$sta->isEmpty())
@@ -305,8 +309,13 @@ function ontology_search_setSimilarTerms($prefix)
 // this function is used to populate the session with similar terms to the one which user entered
 
 
-function printALL($head)
+function printALL($head,$relative_type)
 { 
+  if($head ==NULL)
+    { 
+      drupal_set_message("Your Search term does not have any ".$relative_type." !");
+     return;
+    }
   $temp=$head;
   while($temp !=null)
    { 
