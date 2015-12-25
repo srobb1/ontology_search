@@ -34,17 +34,18 @@ function ontology_search_form() {
       );
     
     $form['query']['example_sequence'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('get the Relatives selected for the search term'),
-    '#prefix' => '<span style="float: left;">',
-    '#suffix' => '</span>',
+    '#type' => 'button',
+    '#value' => t("Get Relatives"),
     '#ajax' => array(
-      'callback' => 'Ontology_Search_Get_Relatives',
-      'wrapper'  => 'fasta-textarea',
-      'method'   => 'replace',
-      'effect'   => 'fade',
-          ),
-      );
+      'callback' =>'Ontology_Search_Get_Relatives',
+      'wrapper' => 'dynamic-tags-fieldset',
+      'method' => 'replace',
+      'event' => 'click',
+      'prevent' => 'submit click mousedown',
+    ),
+    '#limit_validation_errors' => array(), // No elements will be validated
+    '#submit' => array('custom_function'), // An explicit submit functions array is required for this, but may be empty
+  );
 
 
     return $form;
