@@ -1,6 +1,8 @@
 <?php
 module_load_include('inc', 'ontology_search', 'api/ontology_search_api');
 require('includes/ontology_search.form.inc');
+require('includes/admin_settings_form.inc');
+
 // this is to include the file that contains all the functions
 /**
  * @file
@@ -12,15 +14,105 @@ require('includes/ontology_search.form.inc');
 function ontology_search_menu()
 {
   $items = array();
+  
   $items['ontology_search/form'] = array(
         'type' => MENU_CALLBACK,
         'access arguments' => array('access content'),
         'page callback' => 'drupal_get_form',
-        'page arguments'=>array('ontology_search_form'));
+        'page arguments'=>array('ontology_search_form')
+//       'access callback' => TRUE
 
-  return $items;
+        
+        );
+        
+//         
+// $items['admin/ontology_search/config'] = array(
+//     'title' => 'Form API Example of Multiselect Widget',
+//     'page callback' => 'drupal_get_form',
+//     'page arguments' => array('multiselect_fapi_example_display'),
+//     'access callback' => TRUE,
+//     'description' => 'Simple form with a multiselect widget and a submit button. Saves to the variables table.',
+//     'type' => MENU_NORMAL_ITEM,
+//   );  
+//         
+//     
+   $items['admin/ontology_search/config'] = array(
+     'title' => 'Ontology_search',
+     'type' => MENU_NORMAL_ITEM,
+     'access arguments' => array('access content'),
+     'page callback' => 'drupal_get_form',
+     'page arguments' => array('ontology_search_admin_form')
+   );
+ 
+   
+return $items;
 
 }
+
+
+// function multiselect_fapi_example_display($form, &$form_state) {
+//   $form = array();
+//   $form['description'] = array(
+//     '#type' => 'item',
+//     '#title' => t('Simple form with a multiselect widget and a submit button. Saves to the variables.'),
+//   );
+//   $toppings = array(
+//   'pepperoni' => t('Pepperoni'),
+//   'black_olives' => t('Black olives'), 
+//   'veggies' => t('Veggies')
+// );
+// 
+// # the drupal checkboxes form field definition
+// $form['pizza'] = array(
+//   '#title' => t('Pizza Toppings'),
+//   '#type' => 'checkboxes',
+//   '#description' => t('Select the pizza toppings you would like.'),
+//   '#options' => $toppings,
+// );
+// // $form['type_options'] = array(
+// //   '#type' => 'value',
+// //   '#value' => array('APPLICATION' => t('Application'),
+// //                     'DEVELOPMENT' => t('Development'),
+// //                     'ENHANCEMENT' => t('Enhancement'))
+// // );
+// // $form['type'] = array(
+// //   '#title' => t('Project Type'),
+// //   '#type' => 'select',
+// //   '#description' => "Select the project count type.",
+// //   '#options' => $form['type_options']['#value'],
+// // );
+// //  
+// 
+// // $values => array('APPLICATION' => t('Application'),
+// //                  'DEVELOPMENT' => t('Development'),
+// //                  'ENHANCEMENT' => t('Enhancement'))
+// // );
+// // $form['type'] = array(
+// //   '#title' => t('Project Type'),
+// //   '#type' => 'select',
+// //   '#description' => "Select the project count type.",
+// //   '#options' => $values,
+// // );
+// //   $form = system_settings_form($form);
+//   return $form;
+// }
+// 
+// /**
+//  * Function to get the value stored for the multiselect field from the variables table.
+//  * Will return default values if nothing has yet been stored.
+//  */
+// function _multiselect_fapi_example_options() {
+//   return variable_get('multiselector', array('fulltext', 'title', '4', '8'));
+// }
+
+
+function admin_form($form, &$form_state) {
+ 
+}
+
+
+
+
 //this creates the form used to do the searching
 
 function ontology_search_help()

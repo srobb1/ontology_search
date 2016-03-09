@@ -39,36 +39,43 @@ class TermNode
      }
 }
 
-
 // This Acts as a Node  for the linkedlist used in all the below functions 
 
 function Ontology_Search_Get_Relatives($form, $form_state)
 {
    //$similarTerms=$_SESSION['similarTerms'];
+ // drupal_set_message("damn I am here :P");
 if($form_state['values']['GW']=='0')
    { 
+      drupal_set_message("Parent called");
       $parents=ontology_search_getParent($form_state['values']['search_term']);
       printALL($parents,"parents");
   
    }
 elseif($form_state['values']['GW']=='1')
    {
-      $children=ontology_search_getChild($form_state['values']['search_term']);
-      printALL($children,"children");
+     $children=ontology_search_getChild($form_state['values']['search_term']);
+    printALL($children,"children");
    }
 elseif($form_state['values']['GW']=='2')
    {
-      $sibilings=ontology_search_getSibilings($form_state['values']['search_term']);
-      printALL($sibilings,"sibilings");
+     $sibilings=ontology_search_getSibilings($form_state['values']['search_term']);
+     printALL($sibilings,"sibilings");
    }
 
 }
+
+
+
+
 
 //Controller to select which Relative you want to search for 
 
 function ontology_search_getParent($id)
 { 
    $prefix =$form_state['values']['name'];
+ //  drupal_set_message("Searching for what ?");
+   drupal_set_message($prefix);
    $count=0;
     if ($GLOBALS["chado_is_installed"]) 
      {
@@ -285,14 +292,31 @@ function ontology_search_setSimilarTerms($prefix)
     $similarTerms = null;
  
     $results= db_query(
-        'SELECT name,cvterm_id FROM cvterm WHERE name LIKE :name',
+        'SELECT name,cvterm_id,cv_id,dbxref_id FROM cvterm WHERE name LIKE :name',
        array(':name' => '%'.db_like($prefix).'%')
       )->fetchAll();
 
+    $filter = $_SESSION['final'];
+    drupal_set_message("i am here");
+
+     drupal_set_message('filter: <pre>' . print_r($filter, true) . '</pre>');
+
+    
     if($similarTerms==null)
      {
        foreach ($results as $r) {
-       $similarTerms[$r->cvterm_id] = $r->name;
+       $rhs=null;
+       //$db= "dbname:"
+     //   if(array_key_exists("$r->cv_id", $filter)
+       if (array_key_exists($r->cv_id, $filter))
+        {
+          $Ont_Nam= $filter[$r->cv_id];
+         $rhs="$r->name,            $Ont_Nam,               $r->dbxref_id";
+         $similarTerms[$r->cvterm_id] = $rhs;
+  
+        }
+   
+       
        }
      }
      //drupal_set_message('results: <pre>' . print_r($abc, true) . '</pre>');
@@ -305,6 +329,40 @@ function ontology_search_setSimilarTerms($prefix)
 
   }
 }
+
+
+
+
+function get_Names_Ontologies_Available($avail)
+ { 
+   unset($_SESSION['final']);
+ // drupal_set_message("called ur function");
+//  drupal_set_message($avail["546"]);
+$final;
+  foreach ($avail as $key=>$value){
+    $sql =  "SELECT name FROM cv WHERE cv_id = :cv_id ";
+     $results = db_query($sql,array(':cv_id' => $key));
+     foreach ($results as $record) {
+         $final[$key]=$record->name; 
+         drupal_set_message($record->name);
+         }
+    drupal_set_message("Key=".$key." value=".$value);
+    echo "<br>";
+}
+  
+drupal_set_message("I will set the session");
+ drupal_set_message('<pre>'. print_r($final, TRUE) .'</pre>');
+  //drupal_set_message($avail[17]);
+    unset($_SESSION['final']);
+   $_SESSION['final'] =$final;
+   return $final;
+
+
+ }
+
+
+
+
 
 // this function is used to populate the session with similar terms to the one which user entered
 
