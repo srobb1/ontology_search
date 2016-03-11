@@ -1,9 +1,46 @@
 <?php
-function ontology_search_install()
-{
+/**
+ * @file
+ * Installation of the example module
+ */
+
+/**
+ * Implements hook_disable().
+ *
+ * Perform actions when the module is disabled by the site administrator
+ *
+ * @ingroup ontology_search
+ */
+function ontology_search_disable() {
+
+  // EXPLANATION: If you are using Drupal Views you want to ensure that any
+  // default views that your module provides are disabled when the module is
+  // disabled. Default views are specified in the
+  // [module name].views.default.inc file. The following code will disable these
+  // views. If your module does not create any default views you can remove the
+  // following code.
+
+  // Disable all default views provided by this module
+  require_once("ontology_search.views_default.inc");
+  $views = ontology_search_views_default_views();
+  foreach (array_keys($views) as $view_name) {
+    tripal_disable_view($view_name,FALSE,array('suppress_error' => TRUE));
+  }
+
 }
 
+/**
+ * Implements hook_requirements().
+ *
+ * Performs check to see if all required dependencies are met. Drupal will
+ * automatically check for module dependencies but here you can check for other
+ * requirements.
+ *
+ * @ingroup ontology_search
+ */
 function ontology_search_requirements($phase) {
+
+
   $requirements = array();
   if ($phase == 'install') {
     // EXPLANATION: It is essential that Chado be installed for almost all
@@ -13,8 +50,8 @@ function ontology_search_requirements($phase) {
 
     // make sure chado is installed
     if (!$GLOBALS["chado_is_installed"]) {
-      $requirements ['tripal_example'] = array(
-          'title' => "tripal_example",
+      $requirements ['ontology_search'] = array(
+          'title' => "ontology_search",
           'value' => "ERROR: Chado must be installed before this module can be enabled",
           'severity' => REQUIREMENT_ERROR,
       );
@@ -23,19 +60,69 @@ function ontology_search_requirements($phase) {
   return $requirements;
 }
 
-function ontology_search_uninstall()
-{
+/**
+ * Implements hook_install().
+ *
+ * Performs actions when the modules is first installed.
+ *
+ * @ingroup ontology_search
+ */
+function ontology_search_install() {
+  // do nothing
 }
 
-function ontology_search_dependencies() {
+
+/**
+ * Implements hook_uninstall().
+ *
+ * Performs actions when the modules is uninstalled.
+ *
+ * @ingroup ontology_search
+ */
+function ontology_search_uninstall() {
+  // nothing to uninstall
+}
+
+
+/**
+ * This is the required update for ontology_search.
+ */
+function ontology_search_update_7200() {
+  // EXPLANATION: as you create new releases of your module you may find that
+  // tables your module created, or data may need to be adjusted. This function
+  // allows you to do that. This function is executed using the
+  // http://[your site]/update.php  URL or using the drush command 'updatedb'.
+  // This function should be named according to the instructions provided here:
+  // https://api.drupal.org/api/drupal/modules%21system%21system.api.php/function/hook_update_N/7
+  //
+  // It is best not to use Tripal API calls inside of this function because an
+  // upgrade from Drupal 6 to Drupal 7 requires that all modules be disabled
+  // which means the Tripal API is not available. This is an unfortunate
+  // requirement, but will prevent errors during a major upgrade.
+
+  // it is good to wrap any database changes inside of a try catch block:
+  try {
+   // perform database changes
+  }
+  catch (\PDOException $e) {
+    $error = $e->getMessage();
+    throw new DrupalUpdateException('Could not apply updates: '. $error);
+  }
+}
+
+/**
+ * Implementation of hook_update_dependencies(). It specifies a list of other
+ * modules whose updates must be run prior to this one.
+ */
+function ontology_search_update_dependencies() {
   $dependencies = array();
 
   // EXPLANATION: here we can specify which modules must be updated prior to
   // applying the updates in this module. This is useful because it prevents
   // updates from being executed out of order. The following example code shows
-  // that the 'tripal_example' module update number 7200 must be executed after
+  // that the 'ontology_search' module update number 7200 must be executed after
   // the 'tripal_cv' module's 7200 update.
-  $dependencies['tripal_example'][7200] = array(
+  $dependencies['ontology_search'][7200] = array(
     'tripal_cv' => 7200
   );
 

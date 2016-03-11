@@ -1,66 +1,89 @@
 <?php
+
+/**
+ * hook_form()
+ *
+ * Implements hook_form.
+ * Creates a form for search selected ontologies.
+ *
+ * @ingroup ontology_search
+ */
 function ontology_search_form() {
-    $form = array();
-
-$form['some_text'] = array(
-  '#markup' => '<p>ONTOLOGY SEARCH</p>'
-);
-
-$form['some_text2'] = array(
-  '#markup' => '<p>Please type a word or phrase, then select a specific term to search for:</p>'
-);
-
-$form['name']=array(
-        '#type'=>'textfield',
-        '#title'=>t('Enter your search term here'),
-        '#description'=>t('Your search term'),
-
-      );
+  $form = array();
+  
+  // Get term searched for, if any
+  if (isset($_SESSION['term'])) {
+    $term = $_SESSION['term'];
+  }
+  else {
+    $term = '';
+  }
   
 
-    $form['submit']=array(
-
-        '#type'=>'submit',
-        '#value'=>t('Search')
-      );
+  $form['some_text'] = array(
+    '#markup' => '<p>ONTOLOGY SEARCH</p>'
+  );
   
+  $form['some_text2'] = array(
+    '#markup' => '<p>Please type a word or phrase, then select a specific term to search for:</p>'
+  );
 
- 
+  $form['name']=array(
+    '#type' => 'textfield',
+    '#title' => t('Enter your search term here'),
+    '#default_value' => $term,
+  );
+  
+  $form['submit']=array(
+    '#type' => 'submit',
+    '#value' => t('Search'),
+    '#submit' => array('ontology_search_form_submit'),
+  );
 
-
-    $similarTerms=  $_SESSION['similarTerms'];    
-    $form['search_term'] = array(
+//EKSC: use drupal variables here instead of a session object
+  $similarTerms = $_SESSION['similarTerms'];
+  $target_cvterm = $_SESSION['target_cvterm'];
+  $form['search_term'] = array(
     '#type' => 'select',
     '#title' => t('Select the specific term of your interest:'),
-    '#options' => $similarTerms,//variable_get('mydata'),
-    '#default_value' => '',//$defaults['max_target_seqs'],
+    '#options' => $similarTerms,
+    '#default_value' => $target_cvterm,
     '#description' => t('which specific term are you looking for'),
-      );
+  );
 
-    $OntologiesLoaded=null;
-   $vset=variable_get('Ontologies_Available');
-    $OntologiesLoaded=$_SESSION['final'];
-   $OntologiesLoaded=  get_Names_Ontologies_Available($vset);
-   // drupal_set_message('<pre>'. print_r($vset, TRUE) .'</pre>');
-    
-    $form['Ontologies_Avaliable'] = array(
+  // Get the cv ids for ontologies to search
+  $vset = variable_get('Ontologies_Available');
+//drupal_set_message("CV ids to search: <pre>". print_r($vset, TRUE) .'</pre>');
+
+  // Get the names for the cv ids
+  $OntologiesLoaded = get_Names_Ontologies_Available($vset);
+//drupal_set_message('Ontology names: <pre>'. print_r($OntologiesLoaded, TRUE) .'</pre>');
+
+$form['Ontologies_Avaliable'] = array(
     '#type' => 'select',
     '#title' => t('ontologies available:'),
-    '#options' => $OntologiesLoaded,//variable_get('mydata'),
-    '#default_value' => '',//$defaults['max_target_seqs'],
+    '#options' => $OntologiesLoaded,
+    '#default_value' => '',
     '#description' => t('You can further be specific about the ontology you want to search from'),
-      );
+  );
  
-    $relative= array('getParent','getChildren','getSibilings');
-     $form['ALG']['GParam']['GW'] = array(
+  $relative = array(
+      'getParent'    => 'getParent',
+      'getChildren'  => 'getChildren',
+      'getSibilings' => 'getSibilings');
+//EKSC: What is this?
+//  $form['ALG']['GParam']['GW'] = array(
+//EKSC: More clear:
+  $form['relationship'] = array(
     '#type' => 'select',
     '#title' => t('Which Relatives:'),
-    '#options' => $relative,//variable_get('mydata'),
-    '#default_value' => '',//$defaults['max_target_seqs'],
+    '#options' => $relative,
+    '#default_value' => '',
     '#description' => t('Which relative of the selected term do you want'),
-      );
-    
-    $form['query']['example_sequence'] = array(
+  );
+/*EKSC: not necessary to use AJAX, instead create a separate submit function
+        ontology_search_relatives_submit()
+  $form['query']['example_sequence'] = array(
     '#type' => 'button',
     '#value' => t("Get Relative Terms"),
     '#ajax' => array(
@@ -69,54 +92,141 @@ $form['name']=array(
       'method' => 'replace',
       'event' => 'click',
       'prevent' => 'submit click mousedown',
-    ),
+     ),
     '#limit_validation_errors' => array(), // No elements will be validated
     '#submit' => array('custom_function'), // An explicit submit functions array is required for this, but may be empty
   );
+*/
 
-
-    return $form;
+//EKSC: disable this button if there are no similarTerms.
+  $form['get_relatives'] = array(
+    '#type' => 'submit',
+    '#value' => t("Get Relative Terms"),
+    '#submit' => array('ontology_search_relatives_submit'),
+  );
+  
+  $form['clear'] = array(
+    '#type' => 'submit',
+    '#value' => t("Clear search"),
+    '#submit' => array('ontology_search_clear_submit'),
+  );
+  
+  // If there are any cvterms, create html to display them
+  $html = '';
+  $found_list = unserialize(variable_get('FoundTerms'));
+  foreach ($found_list as $cvterm) {
+//drupal_set_message("ontology_search_form(): Found this cvterm: <pre>" . print_r($cvterm, true) . '</pre>');
+    $html .= "<br>[". $cvterm['degree'] . "] " . $cvterm['name'];
+  }
+  if ($html == '') {
+    $html = 'none';
+  }
+  $html = "<br><b>Found these terms:</b><br>$html";
+  $form['found_terms'] = array(
+    '#markup' => $html,
+  );
+  
+return $form;
 }
-// the main form used 
 
 
+/**
+ * hook_form_validate()
+ *
+ * Implements hook_form_validate.
+ * Check ontology search form submission
+ *
+ * @ingroup ontology_search
+ */
 function ontology_search_form_validate($form, $form_state) {
-  //drupal_set_message($form_state['values']['name']);
-   drupal_set_message("I am here 121212");
-   //drupal_set_message($name);
- // print_r($form_state['values']['#rows']['people']);
-   $prefix = $form_state['values']['name'];
-  // drupal_set_message("I am here 1");
-   drupal_set_message($prefix);
-  if(empty($form_state['values']['name']))
-   {
+//EKSC: 'name' is another example of a misleading variable name. This is the
+//      term that is being searched for, it is not the name of anything.
+  if (empty($form_state['values']['name'])) {
      form_set_error('name','Name cannot be empty'); 
-   }
+  }
+  else {
+    // keep the search term for future reference
+    $_SESSION['term'] = $form_state['values']['name'];
+  }
+
+  $_SESSION['target_cvterm'] = $form_state['values']['search_term'];
 }
-//validate the form here
 
 
-
+/**
+ * ontology_search_form_submit()
+ *
+ * Implements the initial term search submission.
+ *
+ * @ingroup ontology_search
+ */
 function ontology_search_form_submit($form, $form_state) {
+//drupal_set_message("ontology_search_form_submit(): form contents: <pre>" . print_r($form_state, TRUE) . "</pre>");
 
- 
-  $prefix =$form_state['values']['name'];
-  drupal_set_message("I am here finally");
-  print_r($prefix);
-  drupal_set_message($prefix);
-  ontology_search_setSimilarTerms($prefix);
-  $vset=variable_get('Ontologies_Available');
-  get_Names_Ontologies_Available($vset);
+  $prefix = $form_state['values']['name'];
 
- // $vset=variable_get('Ontologies_Available');
-  //drupal_set_message($vset);
- // drupal_set_message('<pre>'. print_r($vset, TRUE) .'</pre>');
+  $vset = variable_get('Ontologies_Available');
+  $OntologiesLoaded = get_Names_Ontologies_Available($vset);
 
-  // some thing missing here I have to debug
-  //dont forget
-  //ontology_search_setOntologies();
-  // this function is called to set the session variable to similar terms
-  //which is has beed used to put terms in the drop down 
-
+  // Clear found cvterms list sine we're starting a new search
+  variable_del('FoundTerms');
+  
+//EKSC: Recommend passing in $OntologiesLoaded since you have it already.
+//      Also, this function should return the list of terms.
+  $similarTerms = ontology_search_setSimilarTerms($prefix, $OntologiesLoaded);
+//EKSC: set the similarTerms variable here rather than inside 
+//      ontology_search_setSimilarTerms() and use a drupal variable rather
+//      than a session variable.
+   unset($_SESSION['similarTerms']);
+   $_SESSION['similarTerms'] = $similarTerms;
+//drupal_set_message('_submit(): found these similar terms: <pre>' . print_r($similarTerms, true) . '</pre>');
 }
+
+
+/**
+ * ontology_search_relatives_submit()
+ *
+ * Implements the relatives search submission.
+ *
+ * @ingroup ontology_search
+ */
+function ontology_search_relatives_submit($form, $form_state) {
+//drupal_set_message("ontology_search_relatives_submit(): form contents: <pre>" . print_r($form_state, TRUE) . "</pre>");
+  $found_terms = false;  // false until/unless matching terms are found
+  
+  if (isset($form_state['values']['search_term']) && $form_state['values']['search_term'] != '') {
+    $cvterm = $form_state['values']['search_term'];
+    $relationship = $form_state['values']['relationship'];
+//drupal_set_message("ontology_search_relatives_submit(): Search $relationship for $cvterm");
+    switch ($relationship) {
+      case 'getParent':
+        $found_terms = ontology_search_getParent($cvterm);
+        $found_list = list2array($found_terms, 'getParent');
+        break;
+      
+//EKSC: continue this for siblings and parents.
+    }//switch
+  }
+  
+  // Save this list for future use
+  variable_set('FoundTerms', serialize($found_list));
+}
+
+
+/**
+ * ontology_search_clear_submit()
+ *
+ * Implements the relatives clear submission.
+ * Clears the search form and variables.
+ *
+ * @ingroup ontology_search
+ */
+function ontology_search_clear_submit($form, $form_state) {
+  variable_del('FoundTerms');
+  
+//EKSC: to do: use a Drupal variable for these instead of the session object
+  unset($_SESSION['term']);
+  unset($_SESSION['similarTerms']);
+}
+
 

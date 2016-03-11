@@ -1,132 +1,180 @@
 <?php
-module_load_include('inc', 'ontology_search', 'api/ontology_search_api');
-require('includes/ontology_search.form.inc');
-require('includes/admin_settings_form.inc');
 
-// this is to include the file that contains all the functions
 /**
  * @file
- * This is the main module file.
+ * This file contains all Drupal hooks for the module other than any node hooks
+ * and block hooks. Those go in the [module name].chado_node.inc file and
+ * [module_name].blocks.inc respectively
+ *
+ */
+
+// EXPLANATION: include any files needed for this module. That includes any API
+// file, the theme file, or include files.
+require('api/ontology_search.api.inc');
+require('includes/ontology_search.admin.inc');
 
 
-**/
+/**
+ * Implementation of hook_permissions()
+ *
+ * Set the permission types that this module uses.
+ *
+ * @ingroup ontology_search
+ */
+function ontology_search_permission() {
 
-function ontology_search_menu()
-{
+  // EXPLANATION:  here we want to setup any of the permission types that this
+  // module needs. Our example module creates a new chado node type called
+  // 'chado_example'. Therefore, we need permissions to view, edit, delete,
+  // create our new node type. Additionally, we want to add a permission that
+  // allows for administration of this module. These permissions will appear in
+  // the 'People' -> 'Permissions' configuration page and allow the site admin
+  // to specify which user roles are allowed to perform specific actions.
+  return array(
+    'access chado_example content' => array(
+      'title' => t('View Ontology Search'),
+      'description' => t('Allow users to the Ontology Search pages.'),
+    ),
+    'administer ontology search' => array(
+      'title' => t('Administer Ontology Search'),
+      'description' => t('Allow users to administer Ontology Search.'),
+    ),
+  );
+}
+
+
+/**
+ * Implements hook_menu()
+ *
+ * Specifies menu items and URLs used by this module.
+ *
+ * @ingroup ontology_search
+ */
+function ontology_search_menu() {
   $items = array();
-  
+
+  // EXPLANATION:  the $items array should be populated to contain a list of
+  // menu items or URL callbacks that our module needs.
+  // all Tripal Extension modules should provide at least these menu items:
+  //  * A menu item for an administrative home page
+  //  * A menu item for 'Help' documentation
+  //  * A menu item for a module configuration page
+  //
+
+  // User's search form
   $items['ontology_search/form'] = array(
-        'type' => MENU_CALLBACK,
-        'access arguments' => array('access content'),
-        'page callback' => 'drupal_get_form',
-        'page arguments'=>array('ontology_search_form')
-//       'access callback' => TRUE
+    'title' => 'Ontology Search',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ontology_search_form'),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+    'file' => 'includes/ontology_search.form.inc',
+  );
+  
+  // Administrative menu item
+  $items['admin/tripal/extension/ontology_search'] = array(
+    'title' => 'Ontology Search',
+    'description' => 'Module for hierarchical searching of ontologies.',
+    'page callback' => 'ontology_search_admin_examples_listing',
+    'access arguments' => array('administer ontology search'),
+    'type' => MENU_NORMAL_ITEM,
+  );
 
-        
-        );
-        
-//         
-// $items['admin/ontology_search/config'] = array(
-//     'title' => 'Form API Example of Multiselect Widget',
-//     'page callback' => 'drupal_get_form',
-//     'page arguments' => array('multiselect_fapi_example_display'),
-//     'access callback' => TRUE,
-//     'description' => 'Simple form with a multiselect widget and a submit button. Saves to the variables table.',
-//     'type' => MENU_NORMAL_ITEM,
-//   );  
-//         
-//     
-   $items['admin/ontology_search/config'] = array(
-     'title' => 'Ontology_search',
-     'type' => MENU_NORMAL_ITEM,
-     'access arguments' => array('access content'),
-     'page callback' => 'drupal_get_form',
-     'page arguments' => array('ontology_search_admin_form')
-   );
- 
-   
-return $items;
+  // Help documentation to describe the functionality of the module and any 
+  // installation or setup tasks that may be required. 
+  $items['admin/tripal/extension/ontology_search/help'] = array(
+    'title' => 'Help',
+    'description' => 'Basic Description of Ontology Search Functionality',
+    'page callback' => 'theme',
+    'page arguments' => array('ontology_search_help'),
+    'access arguments' => array('administer ontology search'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 10
+  );
 
+  // Configuration page.
+  $items['admin/tripal/extension/ontology_search/configuration'] = array(
+    'title' => 'Settings',
+    'description' => 'Configure the Ontology Search module',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ontology_search_admin'),
+    'access arguments' => array('administer tripal example'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 5
+  );
+
+  return $items;
+}
+
+/**
+ * We need to let Drupal know about our theme functions and their arguments.
+ * We create theme functions to allow users of the module to customize the look
+ * and feel of the output generated in this module.
+ *
+ * @ingroup ontology_search
+ */
+function ontology_search_theme($existing, $type, $theme, $path) {
+  $core_path = drupal_get_path('module', 'tripal_core');
+
+  // EXPLANATION: this function defines all of the functions and templates that
+  // this module needs to provide content. These details are provided in the
+  // form of an array the indicates which functions or templates provide
+  // content. Please see the Drupal theming guide for an in-depth description
+  // for how theming works in Drupal:
+  // https://drupal.org/documentation/theme
+
+  $items = array();
+
+  return $items;
+}
+
+/**
+ * Implements hook_help()
+ *
+ * Adds a help page to the module list
+ */
+function ontology_search_help ($path, $arg) {
+
+  // EXPLANATION: in the ontology_search_menu() function above we created a menu
+  // item for the help documentation. The menu item specified a function that
+  // should be called when the menu item is clicked. This is that function. But,
+  // rather than place HTML code in this function we want to have our help
+  // documentation in a template file. We specified in the
+  // ontology_search_theme() function that we have a template file so now we want
+  // to use get the contents of that template file and return it.
+  if ($path == 'admin/help#ontology_search') {
+    return theme('ontology_search_help', array());
+  }
 }
 
 
-// function multiselect_fapi_example_display($form, &$form_state) {
-//   $form = array();
-//   $form['description'] = array(
-//     '#type' => 'item',
-//     '#title' => t('Simple form with a multiselect widget and a submit button. Saves to the variables.'),
-//   );
-//   $toppings = array(
-//   'pepperoni' => t('Pepperoni'),
-//   'black_olives' => t('Black olives'), 
-//   'veggies' => t('Veggies')
-// );
-// 
-// # the drupal checkboxes form field definition
-// $form['pizza'] = array(
-//   '#title' => t('Pizza Toppings'),
-//   '#type' => 'checkboxes',
-//   '#description' => t('Select the pizza toppings you would like.'),
-//   '#options' => $toppings,
-// );
-// // $form['type_options'] = array(
-// //   '#type' => 'value',
-// //   '#value' => array('APPLICATION' => t('Application'),
-// //                     'DEVELOPMENT' => t('Development'),
-// //                     'ENHANCEMENT' => t('Enhancement'))
-// // );
-// // $form['type'] = array(
-// //   '#title' => t('Project Type'),
-// //   '#type' => 'select',
-// //   '#description' => "Select the project count type.",
-// //   '#options' => $form['type_options']['#value'],
-// // );
-// //  
-// 
-// // $values => array('APPLICATION' => t('Application'),
-// //                  'DEVELOPMENT' => t('Development'),
-// //                  'ENHANCEMENT' => t('Enhancement'))
-// // );
-// // $form['type'] = array(
-// //   '#title' => t('Project Type'),
-// //   '#type' => 'select',
-// //   '#description' => "Select the project count type.",
-// //   '#options' => $values,
-// // );
-// //   $form = system_settings_form($form);
-//   return $form;
-// }
-// 
-// /**
-//  * Function to get the value stored for the multiselect field from the variables table.
-//  * Will return default values if nothing has yet been stored.
-//  */
-// function _multiselect_fapi_example_options() {
-//   return variable_get('multiselector', array('fulltext', 'title', '4', '8'));
-// }
+/**
+ * Implementation of hook_form_alter()
+ *
+ * Allows a module to alter any form prior to it being rendered. For more
+ * details about Drupal's Form API see this page:
+ *
+ * https://api.drupal.org/api/drupal/includes!form.inc/group/form_api/7
+ *
+ */
+function ontology_search_form_alter(&$form, &$form_state, $form_id) {
 
+  if ($form_id == "chado_example_node_form") {
 
-function admin_form($form, &$form_state) {
- 
-}
+    // EXPLANATION:  The hook_form_alter() Drupal hook is used to alter a form
+    // before it is displayed. This allows any module to provide new form
+    // elements or change the form that another module creates. We do not need
+    // to alter a form created by another module, but we do want to alter the
+    // form for our new node type. For example, all node types will
+    // automatically have a 'Preview' button. For inserting or updating data
+    // for Chado we don't really need a Preview button and it complicates the
+    // form. So, we use the following code to disable the Preview button. If
+    // you want to keep the preview button then remove this code. turn of
+    // preview button for insert/updates
+    $form['actions']['preview']['#access'] = FALSE;
 
-
-
-
-//this creates the form used to do the searching
-
-function ontology_search_help()
-{
-
-}
-
-function ontology_search_permissions()
-{
-
-}
-
-function ontology_search_theme()
-{
-  $themes = array();
-  return $themes;
+    // EXPLANATION: Drupal always adds a 'body' field to all node types.
+    // Our node type doesn't use the 'body' field so we remove it from the form.
+    unset($form['body']);
+  }
 }
