@@ -63,9 +63,11 @@ function ontology_search_admin() {
 function ontology_search_admin_validate($form, &$form_state) {
 	$pids = array_filter($form_state['values']['ontologies']);
 //drupal_set_message('PIDs: <pre>'. print_r($pids, TRUE) .'</pre>');
+//dr_set_message("breakpoint");
   
 //EKSC: are these the ontologies that have been selected or all that are available?
 //      Be sure that variable names are meaningful, correct, and accurate.
+
   variable_set('Ontologies_Available', $pids);
 }
 

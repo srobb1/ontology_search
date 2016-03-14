@@ -53,7 +53,7 @@ function ontology_search_form() {
 
   // Get the cv ids for ontologies to search
   $vset = variable_get('Ontologies_Available');
-//drupal_set_message("CV ids to search: <pre>". print_r($vset, TRUE) .'</pre>');
+drupal_set_message("CV ids to search: <pre>". print_r($vset, TRUE) .'</pre>');
 
   // Get the names for the cv ids
   $OntologiesLoaded = get_Names_Ontologies_Available($vset);
@@ -197,12 +197,23 @@ function ontology_search_relatives_submit($form, $form_state) {
   if (isset($form_state['values']['search_term']) && $form_state['values']['search_term'] != '') {
     $cvterm = $form_state['values']['search_term'];
     $relationship = $form_state['values']['relationship'];
-//drupal_set_message("ontology_search_relatives_submit(): Search $relationship for $cvterm");
+
+drupal_set_message("ontology_search_relatives_submit(): Search $relationship for $cvterm");
     switch ($relationship) {
       case 'getParent':
         $found_terms = ontology_search_getParent($cvterm);
         $found_list = list2array($found_terms, 'getParent');
         break;
+
+       case 'getChildren':
+        $found_terms = ontology_search_getChild($cvterm);
+        $found_list = list2array($found_terms, 'getChild');
+        break; 
+
+        case 'getSibilings':
+        $found_terms = ontology_search_getSibilings($cvterm);
+        $found_list = list2array($found_terms, 'getSibilings');
+        break; 
       
 //EKSC: continue this for siblings and parents.
     }//switch

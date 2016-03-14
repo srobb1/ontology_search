@@ -98,7 +98,7 @@ function ontology_search_menu() {
     'description' => 'Configure the Ontology Search module',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ontology_search_admin'),
-    'access arguments' => array('administer tripal example'),
+    'access arguments' => array('administer ontology search'),
     'type' => MENU_LOCAL_TASK,
     'weight' => 5
   );
