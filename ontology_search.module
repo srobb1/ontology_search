@@ -123,7 +123,15 @@ function ontology_search_theme($existing, $type, $theme, $path) {
   // for how theming works in Drupal:
   // https://drupal.org/documentation/theme
 
-  $items = array();
+  $items = array(
+    // the help template
+    'ontology_search_help' => array(
+      'template' => 'ontology_search_help',
+      'variables' =>  array(NULL),
+      'path' => "$path/theme/templates",
+    ),
+    
+  );
 
   return $items;
 }
