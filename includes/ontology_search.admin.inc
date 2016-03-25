@@ -33,9 +33,13 @@ function ontology_search_admin() {
       $numberOfcvTerms=db_query($query, array(':cv_id' => $r->cv_id))->fetchField();
       //drupal_set_message($numberOfcvTerms);
       //var_dump($numberOfcvTerms);
-      $NameCount="$r->name\t($numberOfcvTerms)";
-     // drupal_set_message($NameCount);
-      $ontologiesAvailable[$r->cv_id] = $NameCount;
+      if($numberOfcvTerms>2)
+       { 
+        $NameCount="$r->name\t($numberOfcvTerms)";
+        // drupal_set_message($NameCount);
+       $ontologiesAvailable[$r->cv_id] = $NameCount;
+       }
+
     }
   }
   
@@ -50,7 +54,7 @@ function ontology_search_admin() {
 
   // the drupal checkboxes form field definition
   $form['ontologies'] = array(
-    '#title' => t('Avaialable ontologies'),
+    '#title' => t('Avaialable ontologies (Term count)'),
     '#type' => 'checkboxes',
     '#description' => t('Select the ontologies you would like users to search.'),
     '#options' => $ontologiesAvailable,
