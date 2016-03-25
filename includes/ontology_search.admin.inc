@@ -28,7 +28,14 @@ function ontology_search_admin() {
     
     $results = db_query('SELECT name,cv_id FROM cv')->fetchAll();
     foreach ($results as $r) {
-      $ontologiesAvailable[$r->cv_id] = $r->name;
+      //drupal_set_message($r->cv_id);
+      $query='SELECT COUNT(cv_id) FROM cvterm where cv_id= :cv_id';
+      $numberOfcvTerms=db_query($query, array(':cv_id' => $r->cv_id))->fetchField();
+      //drupal_set_message($numberOfcvTerms);
+      //var_dump($numberOfcvTerms);
+      $NameCount="$r->name\t($numberOfcvTerms)";
+     // drupal_set_message($NameCount);
+      $ontologiesAvailable[$r->cv_id] = $NameCount;
     }
   }
   

@@ -352,7 +352,7 @@ function ontology_search_setSimilarTerms($prefix, $OntologiesLoaded) {
           $rhs = null;
           if (array_key_exists($r->cv_id, $OntologiesLoaded)) {
             $Ont_Nam = $OntologiesLoaded[$r->cv_id];
-            $rhs ="$r->name,            $Ont_Nam,               $r->dbxref_id";
+            $rhs ="$r->name,\t\t $Ont_Nam,\t\t $r->dbxref_id";
             $similarTerms[$r->cvterm_id] = $rhs;
           }
         }
@@ -388,7 +388,9 @@ function list2array($head, $relative_type) {
     drupal_set_message("Your Search term does not have any ".$relative_type." !");
     return;
   }
-  
+    
+   // drupal_set_message("".$relative_type." found");
+
   $found_list = array();
   
   $temp = $head;
