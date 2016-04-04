@@ -33,6 +33,27 @@ function ontology_search_form() {
     '#title' => t('Enter your search term here'),
     '#default_value' => $term,
   );
+
+
+  // Get the cv ids for ontologies to search
+  $vset = variable_get('Ontologies_Available');
+drupal_set_message("CV ids to search: <pre>". print_r($vset, TRUE) .'</pre>');
+
+  // Get the names for the cv ids
+  $OntologiesLoaded = get_Names_Ontologies_Available($vset);
+//drupal_set_message('Ontology names: <pre>'. print_r($OntologiesLoaded, TRUE) .'</pre>');
+
+$form['Ontologies_Avaliable'] = array(
+    '#type' => 'select',
+    '#title' => t('ontologies available:'),
+    '#options' => $OntologiesLoaded,
+    '#default_value' => '1000',
+    '#description' => t('You can further be specific about the ontology you want to search from'),
+  );
+
+drupal_add_css('.ds-2col-fluid >.group-left {float: left; width:auto;}
+.ds-2col-fluid > .group-right { float: left; width: 75%; margin-left:15px;}'
+, array('group' => CSS_THEME, 'type' => 'inline'));
   
   $form['submit']=array(
     '#type' => 'submit',
@@ -51,21 +72,7 @@ function ontology_search_form() {
     '#description' => t('which specific term are you looking for'),
   );
 
-  // Get the cv ids for ontologies to search
-  $vset = variable_get('Ontologies_Available');
-drupal_set_message("CV ids to search: <pre>". print_r($vset, TRUE) .'</pre>');
-
-  // Get the names for the cv ids
-  $OntologiesLoaded = get_Names_Ontologies_Available($vset);
-//drupal_set_message('Ontology names: <pre>'. print_r($OntologiesLoaded, TRUE) .'</pre>');
-
-$form['Ontologies_Avaliable'] = array(
-    '#type' => 'select',
-    '#title' => t('ontologies available:'),
-    '#options' => $OntologiesLoaded,
-    '#default_value' => '',
-    '#description' => t('You can further be specific about the ontology you want to search from'),
-  );
+  
  
   $relative = array(
       'getParent'    => 'getParent',
@@ -110,13 +117,13 @@ $form['Ontologies_Avaliable'] = array(
     '#value' => t("Clear search"),
     '#submit' => array('ontology_search_clear_submit'),
   );
-  
+ 
   // If there are any cvterms, create html to display them
   $html = '';
   $found_list = unserialize(variable_get('FoundTerms'));
   foreach ($found_list as $cvterm) {
 //drupal_set_message("ontology_search_form(): Found this cvterm: <pre>" . print_r($cvterm, true) . '</pre>');
-    $html .= "<br>[". $cvterm['degree'] . "] " . $cvterm['name'];
+    $html .= "<br>[". $cvterm['degree'] . "] " . $cvterm['name'].",\t".$cvterm['Xref']."\t"."[".$OntologiesLoaded[$cvterm['db_id']]."]" ;
   }
   if ($html == '') {
     $html = 'none';
@@ -173,7 +180,12 @@ function ontology_search_form_submit($form, $form_state) {
   
 //EKSC: Recommend passing in $OntologiesLoaded since you have it already.
 //      Also, this function should return the list of terms.
-  $similarTerms = ontology_search_setSimilarTerms($prefix, $OntologiesLoaded);
+
+ // drupal_set_message("i am here");
+     // drupal_set_message($form_state['values']['Ontologies_Avaliable']);
+   $filter_for_a_specific_ont =  $form_state['values']['Ontologies_Avaliable'] ;
+  $similarTerms = ontology_search_setSimilarTerms($prefix, $OntologiesLoaded,$filter_for_a_specific_ont);
+  
 //EKSC: set the similarTerms variable here rather than inside 
 //      ontology_search_setSimilarTerms() and use a drupal variable rather
 //      than a session variable.

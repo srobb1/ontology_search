@@ -41,6 +41,8 @@ function ontology_search_admin() {
        }
 
     }
+    // m not sure if this should be there !! might have to remove
+    $ontologiesAvailable[1000]="Select All Available Ontologies";
   }
   
   // Get which ontologies have been selected, if any and set them as defaults.

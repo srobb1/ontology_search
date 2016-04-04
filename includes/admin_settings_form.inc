@@ -20,6 +20,8 @@ if ($GLOBALS["chado_is_installed"]) {
        foreach ($results as $r) {
        $ontologiesAvailable[$r->cv_id] = $r->name;
        }
+
+       $ontologiesAvailable[1000]="Select All Available Ontologies"
      }
  }
     //  //drupal_set_message('results: <pre>' . print_r($abc, true) . '</pre>');
@@ -29,11 +31,11 @@ if ($GLOBALS["chado_is_installed"]) {
     
     // }
 
-$toppings = array(
-  'pepperoni' => t('Pepperoni'),
-  'black_olives' => t('Black olives'), 
-  'veggies' => t('Veggies')
-);
+// $toppings = array(
+//   'pepperoni' => t('Pepperoni'),
+//   'black_olives' => t('Black olives'), 
+//   'veggies' => t('Veggies')
+// );
 
 # the drupal checkboxes form field definition
 $form['pizza'] = array(

@@ -18,6 +18,9 @@ class TermNode
   public $pathLength;
   public $relativeType;
   public $name;
+  public $db_xref;
+  public $db_id;
+ // public 
   
   public $next;
   function __construct($objectId,$pathLength,$type) {
@@ -26,6 +29,25 @@ class TermNode
     $this->relativeType = $type;
     $this->name= NULL;
     $this->next = NULL;
+    $this->db_xref=NULL;
+    $this->db_id=NULL;
+  }
+
+  function setDbid($id)
+  {
+    $this->db_id =$id;
+  }
+  function getDbid()
+  {
+    return $this->db_id;
+  }
+  function setDbxref($x)
+  {
+    $this->db_xref=$x;
+  }
+  function getDbxref()
+  {
+    return $this->db_xref;
   }
   function setName($nam) {
     $this->name = $nam;
@@ -140,7 +162,7 @@ function ontology_search_getChildrenatlevel1($id)
    { 
      $cv=$temp->readNode();
      $cvp =$temp->getPathlength();
-     $sql =  "SELECT name FROM cvterm WHERE cvterm_id = :cvterm_id ";
+     $sql =  "SELECT name,cv_id,dbxref_id FROM cvterm WHERE cvterm_id = :cvterm_id ";
      $name = db_query($sql, array(':cvterm_id' => $cv));
      if (!$name) 
        {
@@ -149,6 +171,8 @@ function ontology_search_getChildrenatlevel1($id)
        }
       foreach ($name as $record) {
          $temp->setName($record->name);
+         $temp->setDbxref($record->dbxref_id);
+         $temp->setDbid($record->cv_id);
        }
       $temp=$temp->next;
      }
@@ -199,11 +223,13 @@ function ontology_search_getChild($id)
       {
          $cv=$temp->readNode();
          $pl=$temp->getPathlength();
-         $sql= "SELECT name FROM cvterm WHERE cvterm_id = :cvterm_id";
+         $sql= "SELECT name,cv_id,dbxref_id FROM cvterm WHERE cvterm_id = :cvterm_id";
          $resu = db_query($sql, array(':cvterm_id' => $temp->readNode()));
          foreach ($resu as $record)
            {
             $temp->setName($record->name);
+            $temp->setDbxref($record->dbxref_id);
+            $temp->setDbid($record->cv_id);
            }
          $temp=$temp->next;
 
@@ -265,10 +291,13 @@ function ontology_search_getParent($id) {
     while ($temp != null) {
       $cv = $temp->readNode();
       $pl = $temp->getPathlength();
-      $sql = "SELECT name FROM cvterm WHERE cvterm_id = :cvterm_id";
+      $sql = "SELECT name,cv_id,dbxref_id FROM cvterm WHERE cvterm_id = :cvterm_id";
       $resu = db_query($sql, array(':cvterm_id' => $temp->readNode()));
       foreach ($resu as $record) {
          $temp->setName($record->name);
+         $temp->setDbxref($record->dbxref_id);
+         $temp->setDbid($record->cv_id);
+
       }
       $temp = $temp->next;
 
@@ -293,16 +322,19 @@ function ontology_search_getParent($id) {
  */
 function get_Names_Ontologies_Available($avail) { 
   $final = array();
+
   
   foreach ($avail as $key=>$value){
     $sql =  "SELECT name FROM {cv} WHERE cv_id = :cv_id ";
     $results = chado_query($sql, array(':cv_id' => $key));
     foreach ($results as $record) {
       $final[$key] = $record->name; 
+      $value=$record->name;
     }
+    $final['1000']="Select All Available Ontologies(100000000000)";
 //drupal_set_message("Key=".$key." value=".$value);
   }
-
+  // drupal_set_message('Ontology names: <pre>'. print_r($final, TRUE) .'</pre>');
   return $final;
 }
 
@@ -322,7 +354,7 @@ function get_Names_Ontologies_Available($avail) {
 //EKSC: pass in $OntologiesLoaded. Remember that this is a generic function
 //      that may be called outside the module, or even from outside Drupal, so
 //      don't assume the existance of a drupal or session variable.
-function ontology_search_setSimilarTerms($prefix, $OntologiesLoaded) {
+function ontology_search_setSimilarTerms($prefix, $OntologiesLoaded,$fil) {
   $similarTerms = false;  // false unless successfully populated.
   
   if ($prefix != NULL) { 
@@ -347,7 +379,10 @@ function ontology_search_setSimilarTerms($prefix, $OntologiesLoaded) {
 //drupal_set_message('_setSimilarTerms(): ontologies to search: <pre>' . print_r($OntologiesLoaded, true) . '</pre>');
 
 //EKSC: use SQL to filter for ontologies. See above.
+    if($fil==1000)
+    {  
       if ($similarTerms == null) {
+
         foreach ($results as $r) {
           $rhs = null;
           if (array_key_exists($r->cv_id, $OntologiesLoaded)) {
@@ -357,6 +392,22 @@ function ontology_search_setSimilarTerms($prefix, $OntologiesLoaded) {
           }
         }
       }
+    }
+    else
+    {
+      if ($similarTerms == null) {
+
+        foreach ($results as $r) {
+          $rhs = null;
+          if ($r->cv_id==$fil) {
+            $Ont_Nam = $OntologiesLoaded[$fil];
+            $rhs ="$r->name,\t\t $Ont_Nam,\t\t $r->dbxref_id";
+            $similarTerms[$r->cvterm_id] = $rhs;
+          }
+        }
+      }
+
+    }
 //drupal_set_message('_setSimilarTerms(): found these similar terms: <pre>' . print_r($similarTerms, true) . '</pre>');
 
 //EKSC: again, because this is a general-purpose function it shouldn't assume 
@@ -400,6 +451,8 @@ function list2array($head, $relative_type) {
       'cvterm_id' => $temp->objectId,
       'name'      => $temp->name,
       'degree'    => $temp->pathLength,
+      'db_id'    => $temp->db_id,
+       'Xref'  => $temp->db_xref
     ));
     
     $temp = $temp->next; 
