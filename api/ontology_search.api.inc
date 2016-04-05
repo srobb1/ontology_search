@@ -20,6 +20,7 @@ class TermNode
   public $name;
   public $db_xref;
   public $db_id;
+  public $description;
  // public 
   
   public $next;
@@ -31,6 +32,16 @@ class TermNode
     $this->next = NULL;
     $this->db_xref=NULL;
     $this->db_id=NULL;
+    $this->description=NULL;
+  }
+
+function setDesc($des)
+  {
+    $this->description =$des;
+  }
+  function getDesc()
+  {
+    return $this->description;
   }
 
   function setDbid($id)
@@ -162,7 +173,7 @@ function ontology_search_getChildrenatlevel1($id)
    { 
      $cv=$temp->readNode();
      $cvp =$temp->getPathlength();
-     $sql =  "SELECT name,cv_id,dbxref_id FROM cvterm WHERE cvterm_id = :cvterm_id ";
+     $sql =  "SELECT name,cv_id,dbxref_id,definition FROM cvterm WHERE cvterm_id = :cvterm_id ";
      $name = db_query($sql, array(':cvterm_id' => $cv));
      if (!$name) 
        {
@@ -173,6 +184,7 @@ function ontology_search_getChildrenatlevel1($id)
          $temp->setName($record->name);
          $temp->setDbxref($record->dbxref_id);
          $temp->setDbid($record->cv_id);
+         $temp->setDesc($record->definition);
        }
       $temp=$temp->next;
      }
@@ -223,13 +235,14 @@ function ontology_search_getChild($id)
       {
          $cv=$temp->readNode();
          $pl=$temp->getPathlength();
-         $sql= "SELECT name,cv_id,dbxref_id FROM cvterm WHERE cvterm_id = :cvterm_id";
+         $sql= "SELECT name,cv_id,dbxref_id,definition FROM cvterm WHERE cvterm_id = :cvterm_id";
          $resu = db_query($sql, array(':cvterm_id' => $temp->readNode()));
          foreach ($resu as $record)
            {
             $temp->setName($record->name);
             $temp->setDbxref($record->dbxref_id);
             $temp->setDbid($record->cv_id);
+            $temp->setDesc($record->definition);
            }
          $temp=$temp->next;
 
@@ -291,12 +304,13 @@ function ontology_search_getParent($id) {
     while ($temp != null) {
       $cv = $temp->readNode();
       $pl = $temp->getPathlength();
-      $sql = "SELECT name,cv_id,dbxref_id FROM cvterm WHERE cvterm_id = :cvterm_id";
+      $sql = "SELECT name,cv_id,dbxref_id,definition FROM cvterm WHERE cvterm_id = :cvterm_id";
       $resu = db_query($sql, array(':cvterm_id' => $temp->readNode()));
       foreach ($resu as $record) {
          $temp->setName($record->name);
          $temp->setDbxref($record->dbxref_id);
          $temp->setDbid($record->cv_id);
+         $temp->setDesc($record->definition);
 
       }
       $temp = $temp->next;
@@ -452,7 +466,8 @@ function list2array($head, $relative_type) {
       'name'      => $temp->name,
       'degree'    => $temp->pathLength,
       'db_id'    => $temp->db_id,
-       'Xref'  => $temp->db_xref
+       'Xref'  => $temp->db_xref,
+       'def' => $temp->description
     ));
     
     $temp = $temp->next; 

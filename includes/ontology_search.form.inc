@@ -121,11 +121,15 @@ drupal_add_css('.ds-2col-fluid >.group-left {float: left; width:auto;}
   // If there are any cvterms, create html to display them
   $html = '';
   $found_list = unserialize(variable_get('FoundTerms'));
+  $html="<table >";
+  if($found_list !=null)
+    $html .= "<tr  ><td>[Degree] </td><td>Name</td><td>Db_Xref</td><td>Description</td><td>Ontology Name</td></tr>" ;
   foreach ($found_list as $cvterm) {
 //drupal_set_message("ontology_search_form(): Found this cvterm: <pre>" . print_r($cvterm, true) . '</pre>');
-    $html .= "<br>[". $cvterm['degree'] . "] " . $cvterm['name'].",\t".$cvterm['Xref']."\t"."[".$OntologiesLoaded[$cvterm['db_id']]."]" ;
+    $html .= "<tr  ><td>[". $cvterm['degree'] . "] </td><td>" . $cvterm['name']."</td><td>".$cvterm['Xref']."</td><td>".$cvterm['def']."</td><td>"."[".$OntologiesLoaded[$cvterm['db_id']]."]</td></tr>" ;
   }
-  if ($html == '') {
+  $html.="</table>";
+  if ($html == '<table></table>') {
     $html = 'none';
   }
   $html = "<br><b>Found these terms:</b><br>$html";
