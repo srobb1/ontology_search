@@ -38,7 +38,7 @@ version = 7.x-2.0-rc1
 ; Javascript files that should always be available for the
 ; module should be specified here.
 ;
-;scripts[]          = theme/js/tripal_example.js
+scripts[]          = theme/js/ontology_search_scripts.js
 
 ;
 ; Add additional dependencies for other modules using the module project name.

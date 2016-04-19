@@ -21,6 +21,7 @@ class TermNode
   public $db_xref;
   public $db_id;
   public $description;
+  public $accession;
  // public 
   
   public $next;
@@ -33,8 +34,18 @@ class TermNode
     $this->db_xref=NULL;
     $this->db_id=NULL;
     $this->description=NULL;
+    $this->accession=NULL;
   }
+function setAcc($a)
+  {
+    $this->accession =$a;
 
+    
+  }
+  function getAcc()
+  {
+    return $this->accession;
+  }
 function setDesc($des)
   {
     $this->description =$des;
@@ -185,11 +196,15 @@ function ontology_search_getChildrenatlevel1($id)
          $temp->setDbxref($record->dbxref_id);
          $temp->setDbid($record->cv_id);
          $temp->setDesc($record->definition);
+          $sq = "SELECT accession,db_id FROM dbxref WHERE dbxref_id = :dbxref_id";
+         $res = db_query($sq, array(':dbxref_id' => $record->dbxref_id))->fetchField();
+         //drupal_set_message($res);
+         $temp->setAcc($res);
        }
       $temp=$temp->next;
      }
    
-   return $head;
+   return list2array($head, 'getSibilings');
 }
 
 //thi is second part of getSibiling 
@@ -243,12 +258,17 @@ function ontology_search_getChild($id)
             $temp->setDbxref($record->dbxref_id);
             $temp->setDbid($record->cv_id);
             $temp->setDesc($record->definition);
+             $sq = "SELECT accession,db_id FROM dbxref WHERE dbxref_id = :dbxref_id";
+             $res = db_query($sq, array(':dbxref_id' => $record->dbxref_id))->fetchField();
+             //drupal_set_message($res);
+             $temp->setAcc($res);
            }
          $temp=$temp->next;
 
       }
    }
-  return $head;
+  return list2array($head, 'getChild');
+   
 }
 
 /**
@@ -306,17 +326,28 @@ function ontology_search_getParent($id) {
       $pl = $temp->getPathlength();
       $sql = "SELECT name,cv_id,dbxref_id,definition FROM cvterm WHERE cvterm_id = :cvterm_id";
       $resu = db_query($sql, array(':cvterm_id' => $temp->readNode()));
+      
       foreach ($resu as $record) {
          $temp->setName($record->name);
          $temp->setDbxref($record->dbxref_id);
          $temp->setDbid($record->cv_id);
          $temp->setDesc($record->definition);
+         $sq = "SELECT accession,db_id FROM dbxref WHERE dbxref_id = :dbxref_id";
+         $res = db_query($sq, array(':dbxref_id' => $record->dbxref_id))->fetchField();
+         //drupal_set_message($res);
+         $temp->setAcc($res);
+         //$sq = "SELECT cv_id FROM cv ";
+         //$res = db_query($sq, array())->fetchAll();;
+        //print_r($res);
+         //drupal_set_message($record->dbxref_id);
+         //drupal_set_message($res);
+         //drupal_set_message($res->db_id);
 
       }
       $temp = $temp->next;
 
     }
-    return $head;
+      return list2array($head, 'getParent');
   }
   
 //EKSC: need to return something to indicate the search failed. Returning
@@ -345,7 +376,7 @@ function get_Names_Ontologies_Available($avail) {
       $final[$key] = $record->name; 
       $value=$record->name;
     }
-    $final['1000']="Select All Available Ontologies(100000000000)";
+    $final['1000']="Select All Available Ontologies";
 //drupal_set_message("Key=".$key." value=".$value);
   }
   // drupal_set_message('Ontology names: <pre>'. print_r($final, TRUE) .'</pre>');
@@ -467,7 +498,8 @@ function list2array($head, $relative_type) {
       'degree'    => $temp->pathLength,
       'db_id'    => $temp->db_id,
        'Xref'  => $temp->db_xref,
-       'def' => $temp->description
+       'def' => $temp->description,
+       'accession' => $temp->accession
     ));
     
     $temp = $temp->next; 

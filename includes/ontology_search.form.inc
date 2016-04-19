@@ -18,6 +18,8 @@ function ontology_search_form() {
   else {
     $term = '';
   }
+
+
   
 
   $form['some_text'] = array(
@@ -27,6 +29,8 @@ function ontology_search_form() {
   $form['some_text2'] = array(
     '#markup' => '<p>Please type a word or phrase, then select a specific term to search for:</p>'
   );
+  $htm='';
+
 
   $form['name']=array(
     '#type' => 'textfield',
@@ -42,18 +46,21 @@ drupal_set_message("CV ids to search: <pre>". print_r($vset, TRUE) .'</pre>');
   // Get the names for the cv ids
   $OntologiesLoaded = get_Names_Ontologies_Available($vset);
 //drupal_set_message('Ontology names: <pre>'. print_r($OntologiesLoaded, TRUE) .'</pre>');
+  if (isset($_SESSION['Ontology_Selected'])) {
+    $default_ontology_selected = $_SESSION['Ontology_Selected'];
+  }
+  else {
+     $default_ontology_selected = 1000;
+  }
 
 $form['Ontologies_Avaliable'] = array(
     '#type' => 'select',
     '#title' => t('ontologies available:'),
     '#options' => $OntologiesLoaded,
-    '#default_value' => '1000',
+    '#default_value' => $default_ontology_selected,
     '#description' => t('You can further be specific about the ontology you want to search from'),
   );
 
-drupal_add_css('.ds-2col-fluid >.group-left {float: left; width:auto;}
-.ds-2col-fluid > .group-right { float: left; width: 75%; margin-left:15px;}'
-, array('group' => CSS_THEME, 'type' => 'inline'));
   
   $form['submit']=array(
     '#type' => 'submit',
@@ -63,6 +70,7 @@ drupal_add_css('.ds-2col-fluid >.group-left {float: left; width:auto;}
 
 //EKSC: use drupal variables here instead of a session object
   $similarTerms = $_SESSION['similarTerms'];
+  //sort($similarTerms,SORT_NATURAL | SORT_FLAG_CASE);
   $target_cvterm = $_SESSION['target_cvterm'];
   $form['search_term'] = array(
     '#type' => 'select',
@@ -72,7 +80,12 @@ drupal_add_css('.ds-2col-fluid >.group-left {float: left; width:auto;}
     '#description' => t('which specific term are you looking for'),
   );
 
-  
+if (isset($_SESSION['Relative_Selected'])) {
+    $Relative_Selected = $_SESSION['Relative_Selected'];
+  }
+  else {
+     $default_ontology_selected = 1000;
+  }
  
   $relative = array(
       'getParent'    => 'getParent',
@@ -85,7 +98,7 @@ drupal_add_css('.ds-2col-fluid >.group-left {float: left; width:auto;}
     '#type' => 'select',
     '#title' => t('Which Relatives:'),
     '#options' => $relative,
-    '#default_value' => '',
+    '#default_value' => $Relative_Selected,
     '#description' => t('Which relative of the selected term do you want'),
   );
 /*EKSC: not necessary to use AJAX, instead create a separate submit function
@@ -120,13 +133,25 @@ drupal_add_css('.ds-2col-fluid >.group-left {float: left; width:auto;}
  
   // If there are any cvterms, create html to display them
   $html = '';
+  $html.="".$ab."";
   $found_list = unserialize(variable_get('FoundTerms'));
   $html="<table >";
   if($found_list !=null)
-    $html .= "<tr  ><td>[Degree] </td><td>Name</td><td>Db_Xref</td><td>Description</td><td>Ontology Name</td></tr>" ;
+    $html .= "<tr  ><td>[Degree] </td><td>Name</td><td>Accession</td><td>Description</td><td>Ontology Name</td></tr>" ;
   foreach ($found_list as $cvterm) {
 //drupal_set_message("ontology_search_form(): Found this cvterm: <pre>" . print_r($cvterm, true) . '</pre>');
-    $html .= "<tr  ><td>[". $cvterm['degree'] . "] </td><td>" . $cvterm['name']."</td><td>".$cvterm['Xref']."</td><td>".$cvterm['def']."</td><td>"."[".$OntologiesLoaded[$cvterm['db_id']]."]</td></tr>" ;
+
+    $x=$cvterm['name'];
+    drupal_set_message($x);
+
+   // $settings['backgroundColor'] = '#FF0000';
+  // drupal_add_js(array('ontology_search_scripts' => $settings), 'setting');
+   //drupal_add_js(drupal_get_path('module', 'ontology_search_scripts') . '../theme/js/ontology_search_scripts.js');
+    drupal_add_js(drupal_get_path('module', 'ontology_search').'/theme/js/ontology_search_scripts.js');
+   // damn();
+    echo "<script> test2(); </script>";
+    //test();
+    $html .= "<tr  ><td >[". $cvterm['degree'] . "] </td><td>" . $cvterm['name']."</td><td>".$cvterm['accession']."</td><td>".$cvterm['def']."</td><td>"."[".$OntologiesLoaded[$cvterm['db_id']]."]</td></tr>" ;
   }
   $html.="</table>";
   if ($html == '<table></table>') {
@@ -140,7 +165,12 @@ drupal_add_css('.ds-2col-fluid >.group-left {float: left; width:auto;}
 return $form;
 }
 
-
+// <script type="text/javascript">
+//   function test()
+//   {
+//     alert();
+//   }
+// </script>
 /**
  * hook_form_validate()
  *
@@ -161,6 +191,7 @@ function ontology_search_form_validate($form, $form_state) {
   }
 
   $_SESSION['target_cvterm'] = $form_state['values']['search_term'];
+  $_SESSION['Ontology_Selected']=$form_state['values']['Ontologies_Avaliable'];
 }
 
 
@@ -217,23 +248,26 @@ function ontology_search_relatives_submit($form, $form_state) {
 drupal_set_message("ontology_search_relatives_submit(): Search $relationship for $cvterm");
     switch ($relationship) {
       case 'getParent':
-        $found_terms = ontology_search_getParent($cvterm);
-        $found_list = list2array($found_terms, 'getParent');
+        $found_list = ontology_search_getParent($cvterm);
+      //  $found_list = list2array($found_terms, 'getParent');
         break;
 
        case 'getChildren':
-        $found_terms = ontology_search_getChild($cvterm);
-        $found_list = list2array($found_terms, 'getChild');
+        $found_list= ontology_search_getChild($cvterm);
+       // $found_list = list2array($found_terms, 'getChild');
         break; 
 
         case 'getSibilings':
-        $found_terms = ontology_search_getSibilings($cvterm);
-        $found_list = list2array($found_terms, 'getSibilings');
+        $found_list = ontology_search_getSibilings($cvterm);
+       // $found_list = list2array($found_terms, 'getSibilings');
         break; 
       
 //EKSC: continue this for siblings and parents.
     }//switch
   }
+
+   $_SESSION['Relative_Selected']=$form_state['values']['relationship'];
+
   
   // Save this list for future use
   variable_set('FoundTerms', serialize($found_list));

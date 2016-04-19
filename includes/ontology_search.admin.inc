@@ -53,7 +53,9 @@ function ontology_search_admin() {
       array_push($defaults, $pid);
     }
   }
-
+  // to sort the available ontologies alphabetically
+  
+//sort($ontologiesAvailable,SORT_NATURAL | SORT_FLAG_CASE);
   // the drupal checkboxes form field definition
   $form['ontologies'] = array(
     '#title' => t('Avaialable ontologies (Term count)'),
