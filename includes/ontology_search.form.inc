@@ -19,7 +19,6 @@ function ontology_search_form() {
     $term = '';
   }
 
-
   
 
   $form['some_text'] = array(
@@ -36,12 +35,16 @@ function ontology_search_form() {
     '#type' => 'textfield',
     '#title' => t('Enter your search term here'),
     '#default_value' => $term,
+     //'id' => 'name_field'
+    '#attributes' => array(
+    'id' => 'name_field',
+ ),
   );
 
 
   // Get the cv ids for ontologies to search
   $vset = variable_get('Ontologies_Available');
-drupal_set_message("CV ids to search: <pre>". print_r($vset, TRUE) .'</pre>');
+//drupal_set_message("CV ids to search: <pre>". print_r($vset, TRUE) .'</pre>');
 
   // Get the names for the cv ids
   $OntologiesLoaded = get_Names_Ontologies_Available($vset);
@@ -78,6 +81,7 @@ $form['Ontologies_Avaliable'] = array(
     '#options' => $similarTerms,
     '#default_value' => $target_cvterm,
     '#description' => t('which specific term are you looking for'),
+  //'#access' => FALSE,
   );
 
 if (isset($_SESSION['Relative_Selected'])) {
@@ -100,7 +104,9 @@ if (isset($_SESSION['Relative_Selected'])) {
     '#options' => $relative,
     '#default_value' => $Relative_Selected,
     '#description' => t('Which relative of the selected term do you want'),
+   // '#access' => FALSE,
   );
+
 /*EKSC: not necessary to use AJAX, instead create a separate submit function
         ontology_search_relatives_submit()
   $form['query']['example_sequence'] = array(
@@ -123,12 +129,31 @@ if (isset($_SESSION['Relative_Selected'])) {
     '#type' => 'submit',
     '#value' => t("Get Relative Terms"),
     '#submit' => array('ontology_search_relatives_submit'),
+    //'#access' => FALSE,
+
+
   );
+
+  
+
+
+  if (isset($_SESSION['term'])) {
+    show($form['get_relatives']);
+   show($form['relationship']);
+   show($form['search_term']);
+  }
+  else {
+   hide($form['get_relatives']);
+   hide($form['relationship']);
+   hide($form['search_term']);
+
+  }
   
   $form['clear'] = array(
     '#type' => 'submit',
     '#value' => t("Clear search"),
     '#submit' => array('ontology_search_clear_submit'),
+    //'#access' => FALSE,
   );
  
   // If there are any cvterms, create html to display them
@@ -137,21 +162,23 @@ if (isset($_SESSION['Relative_Selected'])) {
   $found_list = unserialize(variable_get('FoundTerms'));
   $html="<table >";
   if($found_list !=null)
-    $html .= "<tr  ><td>[Degree] </td><td>Name</td><td>Accession</td><td>Description</td><td>Ontology Name</td></tr>" ;
+    $html .= "<tr  ><td >[Degree] </td><td>Name</td><td>Accession</td><td>Description</td><td>Ontology Name</td></tr>" ;
   foreach ($found_list as $cvterm) {
 //drupal_set_message("ontology_search_form(): Found this cvterm: <pre>" . print_r($cvterm, true) . '</pre>');
 
     $x=$cvterm['name'];
-    drupal_set_message($x);
+   // drupal_set_message($x);
 
    // $settings['backgroundColor'] = '#FF0000';
   // drupal_add_js(array('ontology_search_scripts' => $settings), 'setting');
    //drupal_add_js(drupal_get_path('module', 'ontology_search_scripts') . '../theme/js/ontology_search_scripts.js');
     drupal_add_js(drupal_get_path('module', 'ontology_search').'/theme/js/ontology_search_scripts.js');
    // damn();
-    echo "<script> test2(); </script>";
+  //  echo "<script> test2(); </script>";
     //test();
-    $html .= "<tr  ><td >[". $cvterm['degree'] . "] </td><td>" . $cvterm['name']."</td><td>".$cvterm['accession']."</td><td>".$cvterm['def']."</td><td>"."[".$OntologiesLoaded[$cvterm['db_id']]."]</td></tr>" ;
+    $x="".$cvterm['name']."";
+    //drupal_set_message($x);
+    $html .= "<tr class=dom id='$x' style='cursor:pointer' ><td  >[". $cvterm['degree'] . "] </td><td >" . $cvterm['name']."</td><td>".$cvterm['accession']."</td><td>".$cvterm['def']."</td><td>"."[".$OntologiesLoaded[$cvterm['db_id']]."]</td></tr>" ;
   }
   $html.="</table>";
   if ($html == '<table></table>') {
@@ -160,8 +187,9 @@ if (isset($_SESSION['Relative_Selected'])) {
   $html = "<br><b>Found these terms:</b><br>$html";
   $form['found_terms'] = array(
     '#markup' => $html,
+   // '#access' => FALSE,
   );
-  
+
 return $form;
 }
 
@@ -179,7 +207,7 @@ return $form;
  *
  * @ingroup ontology_search
  */
-function ontology_search_form_validate($form, $form_state) {
+function ontology_search_form_validate(&$form, &$form_state) {
 //EKSC: 'name' is another example of a misleading variable name. This is the
 //      term that is being searched for, it is not the name of anything.
   if (empty($form_state['values']['name'])) {
@@ -190,8 +218,12 @@ function ontology_search_form_validate($form, $form_state) {
     $_SESSION['term'] = $form_state['values']['name'];
   }
 
+  //  hide($form['name']);
+ //form_set_value($form['relationship'], array(access => 'TRUE'), $form_state);
+ 
   $_SESSION['target_cvterm'] = $form_state['values']['search_term'];
   $_SESSION['Ontology_Selected']=$form_state['values']['Ontologies_Avaliable'];
+
 }
 
 
@@ -206,7 +238,8 @@ function ontology_search_form_submit($form, $form_state) {
 //drupal_set_message("ontology_search_form_submit(): form contents: <pre>" . print_r($form_state, TRUE) . "</pre>");
 
   $prefix = $form_state['values']['name'];
-
+  //alert();
+  
   $vset = variable_get('Ontologies_Available');
   $OntologiesLoaded = get_Names_Ontologies_Available($vset);
 
@@ -226,6 +259,8 @@ function ontology_search_form_submit($form, $form_state) {
 //      than a session variable.
    unset($_SESSION['similarTerms']);
    $_SESSION['similarTerms'] = $similarTerms;
+
+    $form_state['values']['item'] = 'newvalue';
 //drupal_set_message('_submit(): found these similar terms: <pre>' . print_r($similarTerms, true) . '</pre>');
 }
 
