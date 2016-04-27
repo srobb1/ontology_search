@@ -1,5 +1,12 @@
 (function($) {
   $(document).ready(function() {
+ // $("#name_field").css('width', 240,'float','left');
+ // $("#ont_avail").css({'float','left', position:'relative'});
+ // $("#ont_avail").css({top: 120 , left: 300, position:'absolute'});
+ // $('label[for="edit-ontologies-avaliable"]').css({top: 80, left: 320, position:'absolute'});
+  
+  
+ // $("#sub").css({top: 100, left: 600, position:'absolute'});
   $(".dom").hover(function(){
        $(this).css('border', '2px solid black');
  $(this).mouseout(function(){
@@ -8,34 +15,13 @@
        
 }); 
     $('.dom').click(function() {
-    ///console.log($("#damn").html());
-   // alert();
+   
    $("#name_field").val(this.id);
-      //$(".form-item form-type-select form-item-search-term").hide();
-      
-      //$(".form-item form-type-select form-item-relationship").hide();
-      //alert();
-  // alert($("#name_field").val());
+     
    $("#ontology-search-form").submit();
 
-   // $("#edit-submit").submit(function(e) {
-//       alert('form submitted');
-//      // alert($('form#my-form #edit-name').val());
-//     });
-   //alert($("#name_field").val());
-    
-   // var x='<?php echo $_SESSION['term'] ?>';
-    //alert(x);
-    //alert(form_state['values']['name']);
-      var species = $('#otherspecies_species').find(":selected").val();
-      var term = $.trim($("#otherspecies_term").val());
-      if (!term || term == '') {
-        return;
-      }
+ 
 
-      if (species == 'soybean') {
-        window.location.href = "http://soybase.org//search/index.php?search=true&qtl="+term;
-      }
     });
   });//ready
 })(jQuery);

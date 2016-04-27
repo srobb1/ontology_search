@@ -400,7 +400,7 @@ function get_Names_Ontologies_Available($avail) {
 //      that may be called outside the module, or even from outside Drupal, so
 //      don't assume the existance of a drupal or session variable.
 function ontology_search_setSimilarTerms($prefix, $OntologiesLoaded,$fil) {
-  $similarTerms = false;  // false unless successfully populated.
+  $similarTerms = false;  // false unless successfully populated.       
   
   if ($prefix != NULL) { 
 //EKSC: Should fail with an error if chado not installed or if chado_query 
@@ -432,7 +432,9 @@ function ontology_search_setSimilarTerms($prefix, $OntologiesLoaded,$fil) {
           $rhs = null;
           if (array_key_exists($r->cv_id, $OntologiesLoaded)) {
             $Ont_Nam = $OntologiesLoaded[$r->cv_id];
-            $rhs ="$r->name,\t\t $Ont_Nam,\t\t $r->dbxref_id";
+            $sq = "SELECT accession FROM dbxref WHERE dbxref_id = :dbxref_id";
+           $res = db_query($sq, array(':dbxref_id' => $r->dbxref_id))->fetchField();
+            $rhs ="$r->name,\t\t $Ont_Nam,\t\t $res";
             $similarTerms[$r->cvterm_id] = $rhs;
           }
         }
@@ -446,7 +448,9 @@ function ontology_search_setSimilarTerms($prefix, $OntologiesLoaded,$fil) {
           $rhs = null;
           if ($r->cv_id==$fil) {
             $Ont_Nam = $OntologiesLoaded[$fil];
-            $rhs ="$r->name,\t\t $Ont_Nam,\t\t $r->dbxref_id";
+            $sq = "SELECT accession FROM dbxref WHERE dbxref_id = :dbxref_id";
+           $res = db_query($sq, array(':dbxref_id' => $r->dbxref_id))->fetchField();
+            $rhs ="$r->name,\t\t $Ont_Nam,\t\t $res";
             $similarTerms[$r->cvterm_id] = $rhs;
           }
         }

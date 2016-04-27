@@ -27,6 +27,7 @@ function ontology_search_admin() {
     }
     
     $results = db_query('SELECT name,cv_id FROM cv')->fetchAll();
+
     foreach ($results as $r) {
       //drupal_set_message($r->cv_id);
       $query='SELECT COUNT(cv_id) FROM cvterm where cv_id= :cv_id';
@@ -42,7 +43,8 @@ function ontology_search_admin() {
 
     }
     // m not sure if this should be there !! might have to remove
-    $ontologiesAvailable[1000]="Select All Available Ontologies";
+     $ontologiesAvailable[1000]="Select All Available Ontologies";
+   
   }
   
   // Get which ontologies have been selected, if any and set them as defaults.
@@ -55,7 +57,7 @@ function ontology_search_admin() {
   }
   // to sort the available ontologies alphabetically
   
-//sort($ontologiesAvailable,SORT_NATURAL | SORT_FLAG_CASE);
+asort($ontologiesAvailable,SORT_FLAG_CASE | SORT_NATURAL);
   // the drupal checkboxes form field definition
   $form['ontologies'] = array(
     '#title' => t('Avaialable ontologies (Term count)'),

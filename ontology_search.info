@@ -32,8 +32,7 @@ version = 7.x-2.0-rc1
 ; Style-sheets containing CSS that should always be available for the
 ; module should be specified here.
 ;
-;stylesheets[all][] = theme/css/tripal_example.css
-
+stylesheets[all][] = theme/css/ontology_search_css.css
 ;
 ; Javascript files that should always be available for the
 ; module should be specified here.
