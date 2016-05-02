@@ -35,20 +35,28 @@ function ontology_search_form() {
     '#type' => 'textfield',
     '#title' => t('Enter your search term here'),
     '#default_value' => $term,
+    //'#description' => t('Could not find term you were searching for'),
      //'id' => 'name_field'
     '#attributes' => array(
     'id' => 'name_field',
  ),
   );
+// $form['No_Such_Term'] = array(
+//     '#markup' => '<p>Could not find the term you were looking for</p>',
+//     '#attributes' => array(
+//     'id' => 'NST',
+//  ),
+//   );
+// hide($form['No_Such_Term']);
 
 
   // Get the cv ids for ontologies to search
   $vset = variable_get('Ontologies_Available');
-//drupal_set_message("CV ids to search: <pre>". print_r($vset, TRUE) .'</pre>');
+  //drupal_set_message("CV ids to search: <pre>". print_r($vset, TRUE) .'</pre>');
 
   // Get the names for the cv ids
   $OntologiesLoaded = get_Names_Ontologies_Available($vset);
-//drupal_set_message('Ontology names: <pre>'. print_r($OntologiesLoaded, TRUE) .'</pre>');
+drupal_set_message('Ontology names: <pre>'. print_r($OntologiesLoaded, TRUE) .'</pre>');
   if (isset($_SESSION['Ontology_Selected'])) {
     $default_ontology_selected = $_SESSION['Ontology_Selected'];
   }
@@ -62,6 +70,9 @@ $form['Ontologies_Avaliable'] = array(
     '#options' => $OntologiesLoaded,
     '#default_value' => $default_ontology_selected,
     '#description' => t('You can further be specific about the ontology you want to search from'),
+        '#attributes' => array(
+    'id' => 'ont_avail',
+ ),
   );
 
   
@@ -69,11 +80,15 @@ $form['Ontologies_Avaliable'] = array(
     '#type' => 'submit',
     '#value' => t('Search'),
     '#submit' => array('ontology_search_form_submit'),
+         '#attributes' => array(
+    'id' => 'sub',
+ ),
   );
 
 //EKSC: use drupal variables here instead of a session object
   $similarTerms = $_SESSION['similarTerms'];
   //sort($similarTerms,SORT_NATURAL | SORT_FLAG_CASE);
+  asort($similarTerms,SORT_FLAG_CASE | SORT_NATURAL);
   $target_cvterm = $_SESSION['target_cvterm'];
   $form['search_term'] = array(
     '#type' => 'select',
@@ -137,15 +152,19 @@ if (isset($_SESSION['Relative_Selected'])) {
   
 
 
-  if (isset($_SESSION['term'])) {
+  if (isset($_SESSION['term']) && $similarTerms !=null) {
     show($form['get_relatives']);
    show($form['relationship']);
    show($form['search_term']);
+   hide($form['No_Such_Term']);
+
   }
   else {
    hide($form['get_relatives']);
    hide($form['relationship']);
    hide($form['search_term']);
+   if($similarTerms ==null && isset($_SESSION['term']))
+       show($form['No_Such_Term']);
 
   }
   
@@ -163,6 +182,9 @@ if (isset($_SESSION['Relative_Selected'])) {
   $html="<table >";
   if($found_list !=null)
     $html .= "<tr  ><td >[Degree] </td><td>Name</td><td>Accession</td><td>Description</td><td>Ontology Name</td></tr>" ;
+
+  
+
   foreach ($found_list as $cvterm) {
 //drupal_set_message("ontology_search_form(): Found this cvterm: <pre>" . print_r($cvterm, true) . '</pre>');
 

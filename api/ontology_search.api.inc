@@ -197,9 +197,18 @@ function ontology_search_getChildrenatlevel1($id)
          $temp->setDbid($record->cv_id);
          $temp->setDesc($record->definition);
           $sq = "SELECT accession,db_id FROM dbxref WHERE dbxref_id = :dbxref_id";
-         $res = db_query($sq, array(':dbxref_id' => $record->dbxref_id))->fetchField();
+         $res = db_query($sq, array(':dbxref_id' => $record->dbxref_id));
          //drupal_set_message($res);
-         $temp->setAcc($res);
+         //$temp->setAcc($res);
+         foreach($res as $r)
+         {
+         
+            // $temp->setDbid($r->db_id);
+             $sq = "SELECT name FROM db WHERE db_id = :db_id";
+             $dbname = db_query($sq, array(':db_id' => $r->db_id))->fetchField();
+             $acc_no = "".$dbname.": ".$r->accession."";
+             $temp->setAcc($acc_no);
+         }
        }
       $temp=$temp->next;
      }
@@ -259,9 +268,19 @@ function ontology_search_getChild($id)
             $temp->setDbid($record->cv_id);
             $temp->setDesc($record->definition);
              $sq = "SELECT accession,db_id FROM dbxref WHERE dbxref_id = :dbxref_id";
-             $res = db_query($sq, array(':dbxref_id' => $record->dbxref_id))->fetchField();
+             $res = db_query($sq, array(':dbxref_id' => $record->dbxref_id));
              //drupal_set_message($res);
-             $temp->setAcc($res);
+             //$temp->setAcc($res);
+             foreach($res as $r)
+                 {
+         
+                     //$temp->setDbid($r->db_id);
+                     $sq = "SELECT name FROM db WHERE db_id = :db_id";
+                     $dbname = db_query($sq, array(':db_id' => $r->db_id))->fetchField();
+                      $acc_no = "".$dbname.": ".$r->accession."";
+                      $temp->setAcc($acc_no);
+
+                 }
            }
          $temp=$temp->next;
 
@@ -333,10 +352,21 @@ function ontology_search_getParent($id) {
          $temp->setDbid($record->cv_id);
          $temp->setDesc($record->definition);
          $sq = "SELECT accession,db_id FROM dbxref WHERE dbxref_id = :dbxref_id";
-         $res = db_query($sq, array(':dbxref_id' => $record->dbxref_id))->fetchField();
-         //drupal_set_message($res);
-         $temp->setAcc($res);
-         //$sq = "SELECT cv_id FROM cv ";
+         $res = db_query($sq, array(':dbxref_id' => $record->dbxref_id));
+         foreach($res as $r)
+         {
+         
+         // $temp->setDbid($r->db_id);
+          $sq = "SELECT name FROM db WHERE db_id = :db_id";
+          $dbname = db_query($sq, array(':db_id' => $r->db_id))->fetchField();
+          $acc_no = "".$dbname.": ".$r->accession."";
+          $temp->setAcc($acc_no);
+
+
+         }
+         //drupal_set_message($res->db_id);
+         
+         
          //$res = db_query($sq, array())->fetchAll();;
         //print_r($res);
          //drupal_set_message($record->dbxref_id);
@@ -368,7 +398,8 @@ function ontology_search_getParent($id) {
 function get_Names_Ontologies_Available($avail) { 
   $final = array();
 
-  
+  $final['1000']="Select All Available Ontologies";
+
   foreach ($avail as $key=>$value){
     $sql =  "SELECT name FROM {cv} WHERE cv_id = :cv_id ";
     $results = chado_query($sql, array(':cv_id' => $key));
@@ -376,7 +407,7 @@ function get_Names_Ontologies_Available($avail) {
       $final[$key] = $record->name; 
       $value=$record->name;
     }
-    $final['1000']="Select All Available Ontologies";
+    
 //drupal_set_message("Key=".$key." value=".$value);
   }
   // drupal_set_message('Ontology names: <pre>'. print_r($final, TRUE) .'</pre>');
@@ -432,9 +463,16 @@ function ontology_search_setSimilarTerms($prefix, $OntologiesLoaded,$fil) {
           $rhs = null;
           if (array_key_exists($r->cv_id, $OntologiesLoaded)) {
             $Ont_Nam = $OntologiesLoaded[$r->cv_id];
-            $sq = "SELECT accession FROM dbxref WHERE dbxref_id = :dbxref_id";
-           $res = db_query($sq, array(':dbxref_id' => $r->dbxref_id))->fetchField();
-            $rhs ="$r->name,\t\t $Ont_Nam,\t\t $res";
+            $sq = "SELECT db_id,accession FROM dbxref WHERE dbxref_id = :dbxref_id";
+            $res = db_query($sq, array(':dbxref_id' => $r->dbxref_id));
+            foreach($res as $re)
+             {
+               $sq = "SELECT name FROM db WHERE db_id = :db_id";
+               $dbname = db_query($sq, array(':db_id' => $re->db_id))->fetchField();
+               $acc_no = "".$dbname.": ".$re->accession."";
+               $rhs ="$r->name,\t\t $Ont_Nam,\t\t [$acc_no]";
+             }
+            
             $similarTerms[$r->cvterm_id] = $rhs;
           }
         }
@@ -448,9 +486,15 @@ function ontology_search_setSimilarTerms($prefix, $OntologiesLoaded,$fil) {
           $rhs = null;
           if ($r->cv_id==$fil) {
             $Ont_Nam = $OntologiesLoaded[$fil];
-            $sq = "SELECT accession FROM dbxref WHERE dbxref_id = :dbxref_id";
-           $res = db_query($sq, array(':dbxref_id' => $r->dbxref_id))->fetchField();
-            $rhs ="$r->name,\t\t $Ont_Nam,\t\t $res";
+            $sq = "SELECT db_id,accession FROM dbxref WHERE dbxref_id = :dbxref_id";
+           $res = db_query($sq, array(':dbxref_id' => $r->dbxref_id));
+          foreach($res as $re)
+             {
+               $sq = "SELECT name FROM db WHERE db_id = :db_id";
+               $dbname = db_query($sq, array(':db_id' => $re->db_id))->fetchField();
+               $acc_no = "".$dbname.": ".$re->accession."";
+               $rhs ="$r->name,\t\t $Ont_Nam,\t\t [$acc_no]";
+             }
             $similarTerms[$r->cvterm_id] = $rhs;
           }
         }
@@ -506,8 +550,13 @@ function list2array($head, $relative_type) {
        'accession' => $temp->accession
     ));
     
-    $temp = $temp->next; 
+    $temp = $temp->next;
+     
+  // drupal_set_message("".$results."----".$temp->name."");
+   
   }
+ 
+
   
 //EKSC: want the original term at the top, the most distant relative at the 
 //      bottom, but this reverse function isn't doing the job. May have something

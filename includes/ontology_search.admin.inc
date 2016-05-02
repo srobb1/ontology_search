@@ -7,7 +7,7 @@
 function ontology_search_admin_examples_listing() {
   $output = '';
 
-  $output = 'Some explanation about the Ontology Search module goes here';
+  $output = 'Module for hierarchical searching of ontologies.';
   $output .= "<br><br>Click the 'Settings' tab to set up this module.";
 
   return $output;
@@ -43,7 +43,7 @@ function ontology_search_admin() {
 
     }
     // m not sure if this should be there !! might have to remove
-     $ontologiesAvailable[1000]="Select All Available Ontologies";
+    // $ontologiesAvailable[0]="Select All Available Ontologies";
    
   }
   
