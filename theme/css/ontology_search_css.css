@@ -1,0 +1,55 @@
+#name_field
+{
+   position:relative;
+
+   float:left;
+   width:24%;
+
+}
+
+#ont_avail
+{
+	position:relative;
+    top:-38px;
+    margin-left: 30%;
+	width:26%;
+}
+
+label[for="edit-ontologies-avaliable"]
+{  position:relative;
+    top:-38px;
+    margin-left: 30%;
+	width:30%;
+	height:2%;
+
+}
+
+#description1
+{
+	position:relative;
+    top:-38px;
+    margin-left: 30%;
+	width:30%;
+
+}
+
+#sub
+{
+	position:relative;
+    top:-100px;
+    margin-left: 60%;
+	width:10%;
+	height:4%;
+}
+
+#getrel
+{
+	position: relative;
+	float: left;
+
+}
+#clear
+{
+	position: relative;
+	float: left;
+}

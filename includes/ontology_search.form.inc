@@ -69,7 +69,7 @@ $form['Ontologies_Avaliable'] = array(
     '#title' => t('ontologies available:'),
     '#options' => $OntologiesLoaded,
     '#default_value' => $default_ontology_selected,
-    '#description' => t('You can further be specific about the ontology you want to search from'),
+    '#description' => '<p id="description1">You can further be specific about the ontology you want to search from</p>',
         '#attributes' => array(
     'id' => 'ont_avail',
  ),
@@ -145,7 +145,9 @@ if (isset($_SESSION['Relative_Selected'])) {
     '#value' => t("Get Relative Terms"),
     '#submit' => array('ontology_search_relatives_submit'),
     //'#access' => FALSE,
-
+    '#attributes' => array(
+    'id' => 'getrel',
+ )
 
   );
 
@@ -172,7 +174,10 @@ if (isset($_SESSION['Relative_Selected'])) {
     '#type' => 'submit',
     '#value' => t("Clear search"),
     '#submit' => array('ontology_search_clear_submit'),
-    //'#access' => FALSE,
+    '#attributes' => array(
+    'id' => 'clear',
+ )
+ 
   );
  
   // If there are any cvterms, create html to display them
