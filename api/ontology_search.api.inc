@@ -96,7 +96,7 @@ sibilings for a particular term
 
 function ontology_search_getSibilings($id)
 {
-  $prefix =$form_state['values']['name'];
+  //$prefix =$form_state['values']['name'];
   $count=0;
   if ($GLOBALS["chado_is_installed"]) {
      if (!function_exists('chado_query')) {
@@ -227,7 +227,7 @@ function ontology_search_getChildrenatlevel1($id)
 
 function ontology_search_getChild($id)
 {
-  $prefix =$form_state['values']['name'];
+  //$prefix =$form_state['values']['name'];
   $count=0;
   if ($GLOBALS["chado_is_installed"]) {
     if (!function_exists('chado_query')) {
@@ -302,7 +302,7 @@ function ontology_search_getChild($id)
  */
 function ontology_search_getParent($id) {
 //EKSC: why retrieve $prefix here?
-  $prefix = $form_state['values']['name'];
+ // $prefix = $form_state['values']['name'];
 
   $count = 0;
   if ($GLOBALS["chado_is_installed"]) {
