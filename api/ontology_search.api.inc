@@ -132,11 +132,15 @@ function ontology_search_getSibilings($id)
           else
           {
             $temp=$final;
+//EKSC: this is throwing an error: "Trying to get property of non-object"
+//      Suggests that $temp doesn't always exist.
             while($temp->next!=NULL)
              {
               $temp = $temp->next;
 
              }
+//EKSC: this is throwing an error: "Warning: Attempt to assign property of non-object"
+//      Suggests that $temp doesn't always exist.
             $temp->next=$chi;
 
           }
@@ -206,7 +210,7 @@ function ontology_search_getChildrenatlevel1($id)
             // $temp->setDbid($r->db_id);
              $sq = "SELECT name FROM db WHERE db_id = :db_id";
              $dbname = db_query($sq, array(':db_id' => $r->db_id))->fetchField();
-             $acc_no = "".$dbname.": ".$r->accession."";
+             $acc_no = "".$dbname.":".$r->accession."";
              $temp->setAcc($acc_no);
          }
        }
@@ -277,7 +281,7 @@ function ontology_search_getChild($id)
                      //$temp->setDbid($r->db_id);
                      $sq = "SELECT name FROM db WHERE db_id = :db_id";
                      $dbname = db_query($sq, array(':db_id' => $r->db_id))->fetchField();
-                      $acc_no = "".$dbname.": ".$r->accession."";
+                      $acc_no = "".$dbname.":".$r->accession."";
                       $temp->setAcc($acc_no);
 
                  }
@@ -359,7 +363,7 @@ function ontology_search_getParent($id) {
          // $temp->setDbid($r->db_id);
           $sq = "SELECT name FROM db WHERE db_id = :db_id";
           $dbname = db_query($sq, array(':db_id' => $r->db_id))->fetchField();
-          $acc_no = "".$dbname.": ".$r->accession."";
+          $acc_no = "".$dbname.":".$r->accession."";
           $temp->setAcc($acc_no);
 
 
@@ -427,10 +431,9 @@ function get_Names_Ontologies_Available($avail) {
  */
 //EKSC: Should search for the term anywhere in the name, not just the beginning.
 //      Then the parameter should be named "term", not "prefix".
-//EKSC: pass in $OntologiesLoaded. Remember that this is a generic function
-//      that may be called outside the module, or even from outside Drupal, so
-//      don't assume the existance of a drupal or session variable.
-function ontology_search_setSimilarTerms($prefix, $OntologiesLoaded,$fil) {
+//EKSC: what is $fil??? Also, the use of "1000" below is puzzling and looks too
+//      much like a hard-coded value. Always avoid hard-coded values.
+function ontology_search_setSimilarTerms($prefix, $OntologiesLoaded, $fil) {
   $similarTerms = false;  // false unless successfully populated.       
   
   if ($prefix != NULL) { 
@@ -442,12 +445,14 @@ function ontology_search_setSimilarTerms($prefix, $OntologiesLoaded,$fil) {
       if (function_exists('chado_query')) {
 //drupal_set_message("Chado exists");
       }
-       
+
+//EKSC: already set to false, don't set again
+//      $similarTerms = null;
 //EKSC: more efficient to modify this query to only search specific cv_ids.
-//      use the IN clause: http://www.postgresqltutorial.com/postgresql-in/
-      $similarTerms = null;
+//      use the IN clause: http://www.postgresqltutorial.com/postgresql-in
+//EKSC: need to make search case-insensitve with LOWER
       $results = db_query(
-        'SELECT name,cvterm_id,cv_id,dbxref_id FROM cvterm WHERE name LIKE :name',
+        'SELECT name,cvterm_id,cv_id,dbxref_id FROM cvterm WHERE LOWER(name) LIKE :name',
         array(':name' => '%'.db_like($prefix).'%')
       )->fetchAll();
 //drupal_set_message('_setSimilarTerms(): query results: <pre>' . print_r($results, true) . '</pre>');
@@ -456,8 +461,10 @@ function ontology_search_setSimilarTerms($prefix, $OntologiesLoaded,$fil) {
 
 //EKSC: use SQL to filter for ontologies. See above.
     if($fil==1000)
-    {  
-      if ($similarTerms == null) {
+    {
+//EKSC: since initialized to false, test accordingly
+//      if ($similarTerms == null) {
+       if (!$similarTerms) {
 
         foreach ($results as $r) {
           $rhs = null;
@@ -469,7 +476,7 @@ function ontology_search_setSimilarTerms($prefix, $OntologiesLoaded,$fil) {
              {
                $sq = "SELECT name FROM db WHERE db_id = :db_id";
                $dbname = db_query($sq, array(':db_id' => $re->db_id))->fetchField();
-               $acc_no = "".$dbname.": ".$re->accession."";
+               $acc_no = "".$dbname.":".$re->accession."";
                $rhs ="$r->name,\t\t $Ont_Nam,\t\t [$acc_no]";
              }
             
@@ -492,7 +499,7 @@ function ontology_search_setSimilarTerms($prefix, $OntologiesLoaded,$fil) {
              {
                $sq = "SELECT name FROM db WHERE db_id = :db_id";
                $dbname = db_query($sq, array(':db_id' => $re->db_id))->fetchField();
-               $acc_no = "".$dbname.": ".$re->accession."";
+               $acc_no = "".$dbname.":".$re->accession."";
                $rhs ="$r->name,\t\t $Ont_Nam,\t\t [$acc_no]";
              }
             $similarTerms[$r->cvterm_id] = $rhs;
