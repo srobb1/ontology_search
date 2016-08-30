@@ -22,9 +22,8 @@ class TermNode
   public $db_id;
   public $description;
   public $accession;
- // public 
-  
   public $next;
+  
   function __construct($objectId,$pathLength,$type) {
     $this->objectId = $objectId;
     $this->pathLength = $pathLength;
@@ -35,57 +34,60 @@ class TermNode
     $this->db_id=NULL;
     $this->description=NULL;
     $this->accession=NULL;
-  }
-function setAcc($a)
-  {
+   }
+  
+  function setAcc($a) {
     $this->accession =$a;
-
-    
-  }
-  function getAcc()
-  {
+   }
+  
+  function getAcc() {
     return $this->accession;
-  }
-function setDesc($des)
-  {
+   }
+  
+  function setDesc($des) {
     $this->description =$des;
-  }
-  function getDesc()
-  {
+   }
+  
+  function getDesc() {
     return $this->description;
-  }
-
-  function setDbid($id)
-  {
+   }
+  
+  function setDbid($id) {
     $this->db_id =$id;
-  }
-  function getDbid()
-  {
+   }
+  
+  function getDbid() {
     return $this->db_id;
   }
-  function setDbxref($x)
-  {
+  
+  function setDbxref($x) {
     $this->db_xref=$x;
   }
-  function getDbxref()
-  {
+  
+  function getDbxref() {
     return $this->db_xref;
   }
+  
   function setName($nam) {
     $this->name = $nam;
   }
+  
   function getName() {
     return $this->name;
   }
+  
   function readNode() {
-      return $this->objectId;
+    return $this->objectId;
   }
+  
   function getPathlength() {
-      return $this->pathLength;
+    return $this->pathLength;
   }
+  
   function getType() {
-      return $this->relativeType;
+    return $this->relativeType;
   }
+
 }
 
 /*
@@ -96,48 +98,47 @@ sibilings for a particular term
 
 function ontology_search_getSibilings($id)
 {
-  //$prefix =$form_state['values']['name'];
   $count=0;
   if ($GLOBALS["chado_is_installed"]) {
      if (!function_exists('chado_query')) {
-       drupal_set_message("chado_query doesnt exists");
+         drupal_set_message("chado_query doesnt exists");
+         return null;
         }
-       $sql = "SELECT object_id,type_id,pathdistance FROM cvtermpath WHERE subject_id = :subject_id ORDER BY pathdistance ASC";
-     $par1 = db_query($sql, array(':subject_id' => $id));
-     if($par1==null)
+     $sql = "SELECT object_id,type_id,pathdistance FROM cvtermpath WHERE subject_id = :subject_id ORDER BY pathdistance ASC";
+     $parents = db_query($sql, array(':subject_id' => $id));
+     if($parents==null)
        {
-         drupal_set_message("no children");
+         drupal_set_message("no parents");
        }
      $sta= new \SplStack();
-     foreach ($par1 as $record) {
-         $n= new TermNode($record->object_id,$record->pathdistance,$record->type_id);
-         $sta->push($n);
+     foreach ($parents as $record) {
+         $node= new TermNode($record->object_id,$record->pathdistance,$record->type_id);
+         $sta->push($node);
        }
-     $final=NULL;
+     $allSibilings=NULL;
      if($sta->isEmpty())
          return NULL;      
      $out=$sta->pop();
      while(!$sta->isEmpty())
       { 
-       $pl = $out->getPathlength();
-       $nv = $out->readNode();
-       if($pl==1)
+       $distanceFromGivenNode = $out->getPathlength();
+       /* get only parents at level 1 and then get immediate child for those nodes */
+       if($distanceFromGivenNode ==1)
         {
-          $va=$out->readNode();
-          $chi=ontology_search_getChildrenatlevel1($va);
-          if($final==NULL)
+          $nodeId=$out->readNode();
+          $childrenAtLevel1=ontology_search_getChildrenatlevel1($nodeId);
+          if($allSibilings==NULL)
            {
-            $final=$chi;
+            $allSibilings=$childrenAtLevel1;
            }
           else
           {
-            $temp=$final;
+            $temp=$allSibilings;
             while($temp->next!=NULL)
              {
-              $temp = $temp->next;
-
+               $temp = $temp->next;
              }
-            $temp->next=$chi;
+            $temp->next=$childrenAtLevel1;
 
           }
            $out=$sta->pop();
@@ -147,22 +148,28 @@ function ontology_search_getSibilings($id)
           $out=$sta->pop();
         } 
        }
-       return $final;
+       return $allSibilings;
     }
+   else
+    {
+     drupal_set_message("chado is not installed");
+     return null;
+    }
+
  }
 // first function for sibilings gets the first parent
 
 function ontology_search_getChildrenatlevel1($id)
 {
   $sql =  "SELECT subject_id,type_id,pathdistance FROM cvtermpath WHERE object_id = :object_id ";
-  $sib1 = db_query($sql, array(':object_id' => $id));
-  if (!$sib1)
+  $children = db_query($sql, array(':object_id' => $id));
+  if (!$children)
     {
      echo "An error to get the sibilings at level 1.\n";
      exit;
     }
   $stac= new \SplStack();
-  foreach ($sib1 as $record) {
+  foreach ($children as $record) {
     if($record->pathdistance==1)
       {
         $n= new TermNode($record->subject_id,$record->pathdistance,$record->type_id);
@@ -179,13 +186,13 @@ function ontology_search_getChildrenatlevel1($id)
       $tail= $tail->next;
     }  
   $temp=$head;
-
+ /* get all the information related to a child like name,dbxref, defination, 
+    db name, accession and make an array and return */
   while($temp != null)
    { 
-     $cv=$temp->readNode();
-     $cvp =$temp->getPathlength();
+     $nodeId=$temp->readNode();
      $sql =  "SELECT name,cv_id,dbxref_id,definition FROM cvterm WHERE cvterm_id = :cvterm_id ";
-     $name = db_query($sql, array(':cvterm_id' => $cv));
+     $name = db_query($sql, array(':cvterm_id' => $nodeId));
      if (!$name) 
        {
          echo "name fetch error.\n";
@@ -196,14 +203,10 @@ function ontology_search_getChildrenatlevel1($id)
          $temp->setDbxref($record->dbxref_id);
          $temp->setDbid($record->cv_id);
          $temp->setDesc($record->definition);
-          $sq = "SELECT accession,db_id FROM dbxref WHERE dbxref_id = :dbxref_id";
+         $sq = "SELECT accession,db_id FROM dbxref WHERE dbxref_id = :dbxref_id";
          $res = db_query($sq, array(':dbxref_id' => $record->dbxref_id));
-         //drupal_set_message($res);
-         //$temp->setAcc($res);
-         foreach($res as $r)
-         {
-         
-            // $temp->setDbid($r->db_id);
+        foreach($res as $r)
+          {
              $sq = "SELECT name FROM db WHERE db_id = :db_id";
              $dbname = db_query($sq, array(':db_id' => $r->db_id))->fetchField();
              $acc_no = "".$dbname.": ".$r->accession."";
@@ -216,19 +219,20 @@ function ontology_search_getChildrenatlevel1($id)
    return list2array($head, 'getSibilings');
 }
 
-//thi is second part of getSibiling 
+/*
+this is second part of getSibiling 
+*/
+
 
 
 
 /*
- this function returns the children of a particular term
+ this function returns the children of a particular term by taking the id
 */
 
 
 function ontology_search_getChild($id)
 {
-  //$prefix =$form_state['values']['name'];
-  $count=0;
   if ($GLOBALS["chado_is_installed"]) {
     if (!function_exists('chado_query')) {
         drupal_set_message("chado_query doesnt exists");
@@ -236,7 +240,8 @@ function ontology_search_getChild($id)
     $sql =  "SELECT subject_id,type_id,pathdistance FROM cvtermpath WHERE object_id = :object_id ORDER BY pathdistance DESC";
     $child = db_query($sql, array(':object_id' => $id));
     if($child==null){
-      drupal_set_message("no children");
+        drupal_set_message("no children");
+        return null;
       }
     $sta= new \SplStack();
     foreach ($child as $record) {
@@ -244,7 +249,7 @@ function ontology_search_getChild($id)
         $sta->push($n);
       }
     if($sta->isEmpty())
-         return NULL;   
+          return NULL;   
     $out=$sta->pop();
     $head=$out;
     $tail=$out;
@@ -255,10 +260,10 @@ function ontology_search_getChild($id)
         $tail= $tail->next;
       }
     $temp = $head;
-    while($temp!=null)
+    /* for each child get all the details like name, db name, 
+       defination, accession etc */
+  while($temp!=null)
       {
-         $cv=$temp->readNode();
-         $pl=$temp->getPathlength();
          $sql= "SELECT name,cv_id,dbxref_id,definition FROM cvterm WHERE cvterm_id = :cvterm_id";
          $resu = db_query($sql, array(':cvterm_id' => $temp->readNode()));
          foreach ($resu as $record)
@@ -269,12 +274,8 @@ function ontology_search_getChild($id)
             $temp->setDesc($record->definition);
              $sq = "SELECT accession,db_id FROM dbxref WHERE dbxref_id = :dbxref_id";
              $res = db_query($sq, array(':dbxref_id' => $record->dbxref_id));
-             //drupal_set_message($res);
-             //$temp->setAcc($res);
-             foreach($res as $r)
+            foreach($res as $r)
                  {
-         
-                     //$temp->setDbid($r->db_id);
                      $sq = "SELECT name FROM db WHERE db_id = :db_id";
                      $dbname = db_query($sq, array(':db_id' => $r->db_id))->fetchField();
                       $acc_no = "".$dbname.": ".$r->accession."";
@@ -286,6 +287,12 @@ function ontology_search_getChild($id)
 
       }
    }
+   else
+   {
+     drupal_set_message("No Children Found");
+     return null;
+   }
+  
   return list2array($head, 'getChild');
    
 }
@@ -301,10 +308,7 @@ function ontology_search_getChild($id)
  * @ingroup ontology_search
  */
 function ontology_search_getParent($id) {
-//EKSC: why retrieve $prefix here?
- // $prefix = $form_state['values']['name'];
-
-  $count = 0;
+ 
   if ($GLOBALS["chado_is_installed"]) {
     if (!function_exists('chado_query')) {
       drupal_set_message("problem with chado_query");
@@ -315,15 +319,11 @@ function ontology_search_getParent($id) {
               INNER JOIN cvterm c ON c.cvterm_id=cp.type_id
             WHERE subject_id = :subject_id 
             ORDER BY pathdistance ASC";
-//drupal_set_message("ontology_search_getParent(): search with [$id]");
-    $results = chado_query($sql, array(':subject_id' => $id));
-//drupal_set_message("ontology_search_getParent(): Query results: <pre>" . print_r($results, TRUE) . "</pre>");
 
+            $Parents = chado_query($sql, array(':subject_id' => $id));
     $sta = new \SplStack();
-    foreach ($results as $record) {
-//drupal_set_message("ontology_search_getParent(): one result record: <pre>" . print_r($record, TRUE) . "</pre>");
-      $count++;
-      $n = new TermNode($record->object_id, 
+    foreach ($Parents as $record) {
+       $n = new TermNode($record->object_id, 
                         $record->pathdistance, 
                         $record->relationship);
       $sta->push($n);
@@ -340,13 +340,13 @@ function ontology_search_getParent($id) {
        $tail = $tail->next;
     }
     $temp = $head;
+    /*add more details of node like name, defination
+    db name, dbxref_id etc.*/
     while ($temp != null) {
-      $cv = $temp->readNode();
-      $pl = $temp->getPathlength();
       $sql = "SELECT name,cv_id,dbxref_id,definition FROM cvterm WHERE cvterm_id = :cvterm_id";
-      $resu = db_query($sql, array(':cvterm_id' => $temp->readNode()));
+      $Parents = db_query($sql, array(':cvterm_id' => $temp->readNode()));
       
-      foreach ($resu as $record) {
+      foreach ($Parents as $record) {
          $temp->setName($record->name);
          $temp->setDbxref($record->dbxref_id);
          $temp->setDbid($record->cv_id);
@@ -355,33 +355,25 @@ function ontology_search_getParent($id) {
          $res = db_query($sq, array(':dbxref_id' => $record->dbxref_id));
          foreach($res as $r)
          {
-         
-         // $temp->setDbid($r->db_id);
           $sq = "SELECT name FROM db WHERE db_id = :db_id";
           $dbname = db_query($sq, array(':db_id' => $r->db_id))->fetchField();
           $acc_no = "".$dbname.": ".$r->accession."";
           $temp->setAcc($acc_no);
-
-
          }
-         //drupal_set_message($res->db_id);
          
-         
-         //$res = db_query($sq, array())->fetchAll();;
-        //print_r($res);
-         //drupal_set_message($record->dbxref_id);
-         //drupal_set_message($res);
-         //drupal_set_message($res->db_id);
-
-      }
+       }
       $temp = $temp->next;
 
     }
       return list2array($head, 'getParent');
   }
-  
-//EKSC: need to return something to indicate the search failed. Returning
-//      false if often the best solution.
+  else
+   {
+     drupal_set_message("Chado Not Installed");
+   }
+    
+  return null;
+
 }
 
 
@@ -398,7 +390,7 @@ function ontology_search_getParent($id) {
 function get_Names_Ontologies_Available($avail) { 
   $final = array();
 
-  $final['1000']="Select All Available Ontologies";
+  $final['0']="Select All Available Ontologies";
 
   foreach ($avail as $key=>$value){
     $sql =  "SELECT name FROM {cv} WHERE cv_id = :cv_id ";
@@ -408,9 +400,8 @@ function get_Names_Ontologies_Available($avail) {
       $value=$record->name;
     }
     
-//drupal_set_message("Key=".$key." value=".$value);
-  }
-  // drupal_set_message('Ontology names: <pre>'. print_r($final, TRUE) .'</pre>');
+   }
+
   return $final;
 }
 
@@ -425,40 +416,42 @@ function get_Names_Ontologies_Available($avail) {
  *
  * @ingroup ontology_search
  */
-//EKSC: Should search for the term anywhere in the name, not just the beginning.
-//      Then the parameter should be named "term", not "prefix".
-//EKSC: pass in $OntologiesLoaded. Remember that this is a generic function
-//      that may be called outside the module, or even from outside Drupal, so
-//      don't assume the existance of a drupal or session variable.
-function ontology_search_setSimilarTerms($prefix, $OntologiesLoaded,$fil) {
-  $similarTerms = false;  // false unless successfully populated.       
-  
-  if ($prefix != NULL) { 
-//EKSC: Should fail with an error if chado not installed or if chado_query 
-//      doesn't exist. Good to test for missing requirements, but you need to 
-//      report when they are missing. Code should "fail gracefully" so it is
-//      immediately apparent something is wrong.
-    if ($GLOBALS["chado_is_installed"]) {
-      if (function_exists('chado_query')) {
-//drupal_set_message("Chado exists");
+
+// $SearchTerm is the pattern that we are looking for
+// $OntologiesLoaded are the once that have been Selected by the Admin 
+// $filterTerms based on the Ontology selected by the User
+function ontology_search_setSimilarTerms($searchTerm, $OntologiesLoaded,$filterTerms) {
+
+   if (!$GLOBALS["chado_is_installed"]) {
+       drupal_set_message("Chado Not Installed");
+       return null;
       }
-       
-//EKSC: more efficient to modify this query to only search specific cv_ids.
-//      use the IN clause: http://www.postgresqltutorial.com/postgresql-in/
+
+    if (!function_exists('chado_query')) {
+       drupal_set_message("problem with chado_query");
+       return null;
+      }
+
+   $similarTerms = false;  // false unless successfully populated.       
+  
+  if ($searchTerm != NULL) { 
+
+       if($filterTerms==0)
+       {
+        $sql='SELECT name,cvterm_id,cv_id,dbxref_id FROM cvterm WHERE name LIKE :name ';
+       }
+       else
+       {
+        $sql='SELECT name,cvterm_id,cv_id,dbxref_id FROM cvterm WHERE name LIKE :name AND cv_id='.$filterTerms.'';
+       }
       $similarTerms = null;
+      $all= array_keys($OntologiesLoaded);
       $results = db_query(
-        'SELECT name,cvterm_id,cv_id,dbxref_id FROM cvterm WHERE name LIKE :name',
-        array(':name' => '%'.db_like($prefix).'%')
+        $sql,
+        array(':name' => '%'.db_like($searchTerm).'%')
       )->fetchAll();
-//drupal_set_message('_setSimilarTerms(): query results: <pre>' . print_r($results, true) . '</pre>');
 
-//drupal_set_message('_setSimilarTerms(): ontologies to search: <pre>' . print_r($OntologiesLoaded, true) . '</pre>');
-
-//EKSC: use SQL to filter for ontologies. See above.
-    if($fil==1000)
-    {  
-      if ($similarTerms == null) {
-
+     if ($similarTerms == null) {
         foreach ($results as $r) {
           $rhs = null;
           if (array_key_exists($r->cv_id, $OntologiesLoaded)) {
@@ -477,38 +470,8 @@ function ontology_search_setSimilarTerms($prefix, $OntologiesLoaded,$fil) {
           }
         }
       }
-    }
-    else
-    {
-      if ($similarTerms == null) {
 
-        foreach ($results as $r) {
-          $rhs = null;
-          if ($r->cv_id==$fil) {
-            $Ont_Nam = $OntologiesLoaded[$fil];
-            $sq = "SELECT db_id,accession FROM dbxref WHERE dbxref_id = :dbxref_id";
-           $res = db_query($sq, array(':dbxref_id' => $r->dbxref_id));
-          foreach($res as $re)
-             {
-               $sq = "SELECT name FROM db WHERE db_id = :db_id";
-               $dbname = db_query($sq, array(':db_id' => $re->db_id))->fetchField();
-               $acc_no = "".$dbname.": ".$re->accession."";
-               $rhs ="$r->name,\t\t $Ont_Nam,\t\t [$acc_no]";
-             }
-            $similarTerms[$r->cvterm_id] = $rhs;
-          }
-        }
-      }
-
-    }
-//drupal_set_message('_setSimilarTerms(): found these similar terms: <pre>' . print_r($similarTerms, true) . '</pre>');
-
-//EKSC: again, because this is a general-purpose function it shouldn't assume 
-//      the session object exists. Return the array instead.
-//      //just in case u want to check if all the similar terms are set in the session
-//      unset($_SESSION['similarTerms']);
-//      $_SESSION['similarTerms'] = $similarTerms;
-    }
+    
   }
   
   return $similarTerms;
@@ -532,15 +495,11 @@ function list2array($head, $relative_type) {
     drupal_set_message("Your Search term does not have any ".$relative_type." !");
     return;
   }
-    
-   // drupal_set_message("".$relative_type." found");
-
-  $found_list = array();
+ $found_list = array();
   
   $temp = $head;
   while ($temp !=null) {
-//drupal_set_message("One node: <pre>" . print_r($temp, true) . '</pre>');
-    array_push($found_list, array(
+     array_push($found_list, array(
       'cvterm_id' => $temp->objectId,
       'name'      => $temp->name,
       'degree'    => $temp->pathLength,
@@ -551,22 +510,12 @@ function list2array($head, $relative_type) {
     ));
     
     $temp = $temp->next;
-     
-  // drupal_set_message("".$results."----".$temp->name."");
    
   }
- 
-
-  
-//EKSC: want the original term at the top, the most distant relative at the 
-//      bottom, but this reverse function isn't doing the job. May have something
-//      to do with PHP treating array indices the same as keys, e.g. all arrays
-//      are hashes.
-  // list starts with further-most relative, so reverse it:
+ /* Puts the term on the Top and distant relative at 
+    the Bottom for Children and Parent lists */
        $list_array=$found_list;
   if($relative_type=="getParent")
       $list_array = array_reverse($found_list, true);
-//drupal_set_message("list2array(): The relatives list: <pre>" . print_r($found_list, true) . '</pre>');
-
-  return $list_array;
+      return $list_array;
 }

@@ -22,35 +22,34 @@ function ontology_search_admin() {
   $form = array();
 
   if ($GLOBALS["chado_is_installed"]) {
-    if (function_exists('chado_query')) {
-//drupal_set_message("exists");
+    if (!function_exists('chado_query')) {
+        drupal_set_message(" chado_query does not exists");
+        return null;
     }
     
     $results = db_query('SELECT name,cv_id FROM cv')->fetchAll();
-
     foreach ($results as $r) {
-      //drupal_set_message($r->cv_id);
       $query='SELECT COUNT(cv_id) FROM cvterm where cv_id= :cv_id';
       $numberOfcvTerms=db_query($query, array(':cv_id' => $r->cv_id))->fetchField();
-      //drupal_set_message($numberOfcvTerms);
-      //var_dump($numberOfcvTerms);
+      
       if($numberOfcvTerms>2)
        { 
         $NameCount="$r->name\t($numberOfcvTerms)";
-        // drupal_set_message($NameCount);
-       $ontologiesAvailable[$r->cv_id] = $NameCount;
+        $ontologiesAvailable[$r->cv_id] = $NameCount;
        }
 
     }
-    // m not sure if this should be there !! might have to remove
-    // $ontologiesAvailable[0]="Select All Available Ontologies";
    
+  }
+  else
+  {
+    drupal_set_message(" chado not installed");
+    return null;
   }
   
   // Get which ontologies have been selected, if any and set them as defaults.
   $defaults = array();
   if ($pids = variable_get('Ontologies_Available')) {
-//drupal_set_message('pids: <pre>'. print_r($pids, TRUE) .'</pre>');
     foreach ($pids as $pid) {
       array_push($defaults, $pid);
     }
@@ -75,16 +74,11 @@ asort($ontologiesAvailable,SORT_FLAG_CASE | SORT_NATURAL);
 
 /**
  *
- * @ingroup ontology_search
+ * @ingroup ontology_search 
+ * Ontologies_Available are the Ontologies that are available for the User Selected by the Admin.
  */
 function ontology_search_admin_validate($form, &$form_state) {
 	$pids = array_filter($form_state['values']['ontologies']);
-//drupal_set_message('PIDs: <pre>'. print_r($pids, TRUE) .'</pre>');
-//dr_set_message("breakpoint");
-  
-//EKSC: are these the ontologies that have been selected or all that are available?
-//      Be sure that variable names are meaningful, correct, and accurate.
-
   variable_set('Ontologies_Available', $pids);
 }
 

@@ -19,9 +19,7 @@ function ontology_search_form() {
     $term = '';
   }
 
-  
-
-  $form['some_text'] = array(
+ $form['some_text'] = array(
     '#markup' => '<p>ONTOLOGY SEARCH</p>'
   );
   
@@ -35,33 +33,21 @@ function ontology_search_form() {
     '#type' => 'textfield',
     '#title' => t('Enter your search term here'),
     '#default_value' => $term,
-    //'#description' => t('Could not find term you were searching for'),
-     //'id' => 'name_field'
     '#attributes' => array(
     'id' => 'name_field',
- ),
+   ),
   );
-// $form['No_Such_Term'] = array(
-//     '#markup' => '<p>Could not find the term you were looking for</p>',
-//     '#attributes' => array(
-//     'id' => 'NST',
-//  ),
-//   );
-// hide($form['No_Such_Term']);
 
-
-  // Get the cv ids for ontologies to search
+// Get the cv ids for ontologies to search from 
+// Set by the Admin
   $vset = variable_get('Ontologies_Available');
-  //drupal_set_message("CV ids to search: <pre>". print_r($vset, TRUE) .'</pre>');
-
   // Get the names for the cv ids
   $OntologiesLoaded = get_Names_Ontologies_Available($vset);
-drupal_set_message('Ontology names: <pre>'. print_r($OntologiesLoaded, TRUE) .'</pre>');
-  if (isset($_SESSION['Ontology_Selected'])) {
+ if (isset($_SESSION['Ontology_Selected'])) {
     $default_ontology_selected = $_SESSION['Ontology_Selected'];
   }
   else {
-     $default_ontology_selected = 1000;
+     $default_ontology_selected = 0;
   }
 
 $form['Ontologies_Avaliable'] = array(
@@ -96,14 +82,13 @@ $form['Ontologies_Avaliable'] = array(
     '#options' => $similarTerms,
     '#default_value' => $target_cvterm,
     '#description' => t('which specific term are you looking for'),
-  //'#access' => FALSE,
   );
 
 if (isset($_SESSION['Relative_Selected'])) {
     $Relative_Selected = $_SESSION['Relative_Selected'];
   }
   else {
-     $default_ontology_selected = 1000;
+     $default_ontology_selected = 0;
   }
  
   $relative = array(
@@ -220,12 +205,6 @@ if (isset($_SESSION['Relative_Selected'])) {
 return $form;
 }
 
-// <script type="text/javascript">
-//   function test()
-//   {
-//     alert();
-//   }
-// </script>
 /**
  * hook_form_validate()
  *
@@ -262,15 +241,9 @@ function ontology_search_form_validate(&$form, &$form_state) {
  * @ingroup ontology_search
  */
 function ontology_search_form_submit($form, $form_state) {
-//drupal_set_message("ontology_search_form_submit(): form contents: <pre>" . print_r($form_state, TRUE) . "</pre>");
-
   $prefix = $form_state['values']['name'];
-  //alert();
-  
   $vset = variable_get('Ontologies_Available');
   $OntologiesLoaded = get_Names_Ontologies_Available($vset);
-
-  // Clear found cvterms list sine we're starting a new search
   variable_del('FoundTerms');
   
 //EKSC: Recommend passing in $OntologiesLoaded since you have it already.
@@ -288,7 +261,7 @@ function ontology_search_form_submit($form, $form_state) {
    $_SESSION['similarTerms'] = $similarTerms;
 
     $form_state['values']['item'] = 'newvalue';
-//drupal_set_message('_submit(): found these similar terms: <pre>' . print_r($similarTerms, true) . '</pre>');
+
 }
 
 
@@ -300,7 +273,6 @@ function ontology_search_form_submit($form, $form_state) {
  * @ingroup ontology_search
  */
 function ontology_search_relatives_submit($form, $form_state) {
-//drupal_set_message("ontology_search_relatives_submit(): form contents: <pre>" . print_r($form_state, TRUE) . "</pre>");
   $found_terms = false;  // false until/unless matching terms are found
   
   if (isset($form_state['values']['search_term']) && $form_state['values']['search_term'] != '') {
@@ -311,20 +283,16 @@ drupal_set_message("ontology_search_relatives_submit(): Search $relationship for
     switch ($relationship) {
       case 'getParent':
         $found_list = ontology_search_getParent($cvterm);
-      //  $found_list = list2array($found_terms, 'getParent');
         break;
 
-       case 'getChildren':
+      case 'getChildren':
         $found_list= ontology_search_getChild($cvterm);
-       // $found_list = list2array($found_terms, 'getChild');
-        break; 
+         break; 
 
-        case 'getSibilings':
+      case 'getSibilings':
         $found_list = ontology_search_getSibilings($cvterm);
-       // $found_list = list2array($found_terms, 'getSibilings');
         break; 
       
-//EKSC: continue this for siblings and parents.
     }//switch
   }
 
