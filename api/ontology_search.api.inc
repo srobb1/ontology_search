@@ -130,17 +130,16 @@ function ontology_search_getSibilings($id)
           $childrenAtLevel1=ontology_search_getChildrenatlevel1($nodeId);
           if($allSibilings==NULL)
            {
-            $allSibilings=$childrenAtLevel1;
+             $allSibilings=$childrenAtLevel1;
            }
           else
           {
-            $temp=$allSibilings;
-            while($temp->next!=NULL)
-             {
-               $temp = $temp->next;
-             }
-            $temp->next=$childrenAtLevel1;
-
+             $temp=$allSibilings;
+             while($temp->next!=NULL)
+               {
+                  $temp = $temp->next;
+               }
+             $temp->next=$childrenAtLevel1;
           }
            $out=$sta->pop();
         }
@@ -424,6 +423,7 @@ function get_Names_Ontologies_Available($avail) {
  * @ingroup ontology_search
  */
 
+
 // $SearchTerm is the pattern that we are looking for
 // $OntologiesLoaded are the once that have been Selected by the Admin 
 // $filterTerms based on the Ontology selected by the User
@@ -457,8 +457,7 @@ function ontology_search_setSimilarTerms($searchTerm, $OntologiesLoaded,$filterT
         $sql,
         array(':name' => '%'.db_like($searchTerm).'%')
       )->fetchAll();
-
-     if ($similarTerms == null) {
+ if ($similarTerms == null) {
         foreach ($results as $r) {
           $rhs = null;
           if (array_key_exists($r->cv_id, $OntologiesLoaded)) {
