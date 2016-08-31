@@ -108,7 +108,8 @@ function ontology_search_getSibilings($id)
      $parents = db_query($sql, array(':subject_id' => $id));
      if($parents==null)
        {
-         drupal_set_message("no parents");
+         drupal_set_message("no parents at level 1");
+         return null;
        }
      $sta= new \SplStack();
      foreach ($parents as $record) {
@@ -175,7 +176,12 @@ function ontology_search_getChildrenatlevel1($id)
         $n= new TermNode($record->subject_id,$record->pathdistance,$record->type_id);
         $stac->push($n);
       }
-   }          
+   }    
+   if($stac->isEmpty()) 
+   {
+    echo "Stack Empty --getChildrenatlevel1 \n";
+    exit; 
+   }      
   $out=$stac->pop();
   $head=$out;
   $tail=$out;
@@ -209,7 +215,7 @@ function ontology_search_getChildrenatlevel1($id)
           {
              $sq = "SELECT name FROM db WHERE db_id = :db_id";
              $dbname = db_query($sq, array(':db_id' => $r->db_id))->fetchField();
-             $acc_no = "".$dbname.": ".$r->accession."";
+             $acc_no = "".$dbname.":".$r->accession."";
              $temp->setAcc($acc_no);
          }
        }
@@ -236,6 +242,7 @@ function ontology_search_getChild($id)
   if ($GLOBALS["chado_is_installed"]) {
     if (!function_exists('chado_query')) {
         drupal_set_message("chado_query doesnt exists");
+        exit;
       }
     $sql =  "SELECT subject_id,type_id,pathdistance FROM cvtermpath WHERE object_id = :object_id ORDER BY pathdistance DESC";
     $child = db_query($sql, array(':object_id' => $id));
@@ -278,7 +285,7 @@ function ontology_search_getChild($id)
                  {
                      $sq = "SELECT name FROM db WHERE db_id = :db_id";
                      $dbname = db_query($sq, array(':db_id' => $r->db_id))->fetchField();
-                      $acc_no = "".$dbname.": ".$r->accession."";
+                      $acc_no = "".$dbname.":".$r->accession."";
                       $temp->setAcc($acc_no);
 
                  }
@@ -357,7 +364,7 @@ function ontology_search_getParent($id) {
          {
           $sq = "SELECT name FROM db WHERE db_id = :db_id";
           $dbname = db_query($sq, array(':db_id' => $r->db_id))->fetchField();
-          $acc_no = "".$dbname.": ".$r->accession."";
+          $acc_no = "".$dbname.":".$r->accession."";
           $temp->setAcc($acc_no);
          }
          
@@ -438,11 +445,11 @@ function ontology_search_setSimilarTerms($searchTerm, $OntologiesLoaded,$filterT
 
        if($filterTerms==0)
        {
-        $sql='SELECT name,cvterm_id,cv_id,dbxref_id FROM cvterm WHERE name LIKE :name ';
+        $sql='SELECT name,cvterm_id,cv_id,dbxref_id FROM cvterm WHERE LOWER(name) LIKE :name ';
        }
        else
        {
-        $sql='SELECT name,cvterm_id,cv_id,dbxref_id FROM cvterm WHERE name LIKE :name AND cv_id='.$filterTerms.'';
+        $sql='SELECT name,cvterm_id,cv_id,dbxref_id FROM cvterm WHERE LOWER(name) LIKE :name AND cv_id='.$filterTerms.'';
        }
       $similarTerms = null;
       $all= array_keys($OntologiesLoaded);
@@ -462,7 +469,7 @@ function ontology_search_setSimilarTerms($searchTerm, $OntologiesLoaded,$filterT
              {
                $sq = "SELECT name FROM db WHERE db_id = :db_id";
                $dbname = db_query($sq, array(':db_id' => $re->db_id))->fetchField();
-               $acc_no = "".$dbname.": ".$re->accession."";
+               $acc_no = "".$dbname.":".$re->accession."";
                $rhs ="$r->name,\t\t $Ont_Nam,\t\t [$acc_no]";
              }
             
