@@ -444,32 +444,34 @@ function ontology_search_setSimilarTerms($searchTerm, $OntologiesLoaded, $filter
 
     if(!$filterTerms)
     {
-      $sql='SELECT name,cvterm_id,cv_id,dbxref_id FROM cvterm WHERE LOWER(name) LIKE :name ';
+      $sql='SELECT name,cvterm_id,cv_id,dbxref_id FROM {cvterm} WHERE LOWER(name) LIKE :name ';
     }
     else
     {
-      $sql='SELECT name,cvterm_id,cv_id,dbxref_id FROM cvterm WHERE LOWER(name) LIKE :name AND cv_id='.$filterTerms.'';
+      $sql='SELECT name,cvterm_id,cv_id,dbxref_id FROM {cvterm} WHERE LOWER(name) LIKE :name AND cv_id='.$filterTerms.'';
     }
     $similarTerms = null;
     $all= array_keys($OntologiesLoaded);
-    $results = db_query(
-      $sql,
-      array(':name' => '%'.db_like($searchTerm).'%')
-    )->fetchAll();
-    
+    $args = array( ':name' => '%'.db_like($searchTerm).'%'  );
+    $results = chado_query( $sql) ;
     if (!$similarTerms) {
       foreach ($results as $r) {
         $rhs = null;
         if (array_key_exists($r->cv_id, $OntologiesLoaded)) {
           $Ont_Nam = $OntologiesLoaded[$r->cv_id];
-          $sq = "SELECT db_id,accession FROM dbxref WHERE dbxref_id = :dbxref_id";
-          $res = db_query($sq, array(':dbxref_id' => $r->dbxref_id));
+          $sq = "SELECT db_id,accession FROM {dbxref} WHERE dbxref_id = :dbxref_id";
+          $res = chado_query($sq, array(':dbxref_id' => $r->dbxref_id));
           foreach($res as $re)
           {
-            $sq = "SELECT name FROM db WHERE db_id = :db_id";
-            $dbname = db_query($sq, array(':db_id' => $re->db_id))->fetchField();
-            $acc_no = "".$dbname.":".$re->accession."";
-            $rhs ="$r->name,\t\t $Ont_Nam,\t\t [$acc_no]";
+            $sq = "SELECT name FROM {db} WHERE db_id = :db_id";
+            $results_db = chado_query($sq, array(':db_id' => $re->db_id));
+            $dbnam=null;
+            $acc_no=null;
+            foreach ($results_db as $r){
+              $dbname = $r->name;
+              $acc_no = "".$dbname.":".$re->accession."";
+              $rhs ="$r->name,\t\t $Ont_Nam,\t\t [$acc_no]";
+            }
           }
           
           $similarTerms[$r->cvterm_id] = $rhs;
