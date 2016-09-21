@@ -27,11 +27,16 @@ function ontology_search_admin() {
         return null;
     }
     
-    $results = db_query('SELECT name,cv_id FROM cv')->fetchAll();
+    $sql = 'SELECT name,cv_id FROM {cv}';
+    $results = chado_query( $sql) ;
     foreach ($results as $r) {
-      $query='SELECT COUNT(cv_id) FROM cvterm where cv_id= :cv_id';
-      $numberOfcvTerms=db_query($query, array(':cv_id' => $r->cv_id))->fetchField();
-      
+      $sql_count='SELECT COUNT(cv_id) as cv_id_count FROM {cvterm} where cv_id = :cv_id';
+      $args = array( ':cv_id' => $r->cv_id  );  
+      $results_sql_count = chado_query( $sql_count , $args) ;
+       $numberOfcvTerms;
+       foreach ($results_sql_count as $rc) {
+           $numberOfcvTerms = $rc->cv_id_count;
+       }
       if($numberOfcvTerms>2)
        { 
         $NameCount="$r->name\t($numberOfcvTerms)";
